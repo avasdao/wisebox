@@ -1,0 +1,71 @@
+pragma nexscript >= 0.2.0;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copyright (c) 2023 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Fomo (Fear of missing out) — is an auction contract designed for very
+ * exclusive and limited edition collections that offer asset quantities usually
+ * numbering in the single (1 - 9) digits.
+ *
+ * Empty contract template.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : FOMO01
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://docs.causes.cash/fomo
+ *   - https://avasdao.org
+ *
+ */
+contract Fomo(bytes32 key, int value, pubkey owner) {
+    /**
+     * Reclaim
+     *
+     * Allows a bidder to reclaim their bid amount.
+     *
+     * @param owner
+     * @param signature
+     */
+    function reclaim(sig signature) {
+        /* Set dust value. */
+        // int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(key == bytes(0) && value == 0);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Collect
+     *
+     * Alllows the bidder to Claim their asset, in exchange for the agreed
+     * upon amount.
+     *
+     * @param owner
+     * @param signature
+     */
+    // function collect(pubkey owner, sig signature) {
+    //     /* Set dust value. */
+    //     int DUST_VALUE = 546;
+    //
+    //     /* Verify parameter. */
+    //     require(param >= DUST_VALUE);
+    //
+    //     /* Verify transaction is signed by the owner. */
+    //     require(checkSig(signature, owner));
+    // }
+}

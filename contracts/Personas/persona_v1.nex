@@ -1,0 +1,160 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ *
+ * Copyright (c) 2023 Modenero DAO
+ * Released under the MIT License.
+ *
+ * Persona
+ * (a member of the "Wise" Personas suite)
+ *
+ * An account abstraction protocol to create "wiser" (wallet) Personas
+ * for Nexa users; offering signaficant UX advantages over standard
+ * wallet addresses.
+ *
+ * Benefits include (but are not limited to):
+ *   1. Wallet recovery - security does not rely on a seed phrase or
+ *                        private key.
+ *   2. Batch txs       - we can batch multiple transactions together and
+ *                        approve all of them at once.
+ *   3. Shared accounts - share different levels of access to your wallet
+ *                        with multiple users.
+ *   4. Automated txs   - define a range of parameters such as access to
+ *                        specific tokens, spend limits, duration, fee limit,
+ *                        specific actions based on pre-defined triggers,
+ *                        and much more.
+ *
+ * NOTES
+ * --------------------
+ * Persona Agents are created (ie. minted) to manage on-chain activities.
+ *
+ * Version (1) of the specification is as follows:
+ *
+ * (byte)    num_auth_roles     : The total # of Authority roles assigned to this Persona.
+ * (bytes64) tokenid_X          : The token id of Authority (X).
+ * (bytes8)  rights_X           : The rights granted to this Authority (X).
+ * (byte)    num_limits_X       : The total # of limits placed on this Authority (X).
+ * (bytes8)  limit_satoshis_X_Y : Satoshi limit (Y) placed on Authority (X).
+ * (bytes4)  limit_time_X_Y     : Time limit (Y) placed on Authority (X).
+ *
+ * Rights are granted to each Authority (ie. tokenid) assigned to the Persona,
+ * with the following (8-byte) schema:
+ *
+ * Byte #1 -> Permissions (Read-Write-Execute)
+ * Byte #2 -> Threshold (Write)
+ * Byte #3 -> Threshold (Execute)
+ * Byte #4 -> (unassigned)
+ * Byte #5 -> (unassigned)
+ * Byte #6 -> (unassigned)
+ * Byte #7 -> (unassigned)
+ * Byte #8 -> (unassigned)
+ *
+ * A NEW category request is being made to the "official" NFT specification:
+ *   "persona"
+ * (see: https://spec.nexa.org/nexa/NFTcategories.md)
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : PERSONA01
+ *
+ * concierge (bytes64) : A Concierge is used to coordinate ALL Persona activities.
+ *
+ * For more information, please visit the following resources:
+ *   - https://domain.tld
+ *   - https://modenero.com
+ *
+ * @param concierge
+ *
+ */
+contract Persona(bytes64 concierge) {
+    /**
+     * Transfer
+     *
+     * Grants permission by one (or up to three) Owner(s) to
+     * transfer assets managed by this Persona (contract).
+     *
+     * @param user_1
+     * @param user_2
+     * @param user_3
+     * @param signature_1
+     * @param signature_2
+     * @param signature_3
+     */
+    function transfer(
+        pubkey user_1,
+        pubkey user_2,
+        pubkey user_3,
+        sig signature_1,
+        sig signature_2,
+        sig signature_3
+    ) {
+        /* Parse (up to 3) token ids. */
+        bytes64 tokenid_1 = bytes64(concierge.split(64)[0]);
+        bytes64 tokenid_2 = bytes64(concierge.split(128)[0].split(64)[1]);
+        bytes64 tokenid_3 = bytes64(concierge.split(192)[0].split(128)[1]);
+
+        // NOTE: `threshold` is 4-byte integer.
+        int threshold = int(concierge.split(196)[0].split(192)[1]);
+
+        /* Validate 1st user. */
+        if (tokenid_1 != 0x0) {
+            require(hash160(user_1) == tokenid_1); // FIXME: Retrieve owner pubkey from lockingBytecode.
+
+            require(checkSig(signature_1, user_1));
+        }
+
+        /* Validate 2nd user. */
+        if (tokenid_2 != 0x0) {
+            require(hash160(user_2) == tokenid_2); // FIXME: Retrieve owner pubkey from lockingBytecode.
+
+            require(checkSig(signature_2, user_2));
+        }
+
+        /* Validate 3rd user. */
+        if (tokenid_3 != 0x0) {
+            require(hash160(user_3) == tokenid_3); // FIXME: Retrieve owner pubkey from lockingBytecode.
+
+            require(checkSig(signature_3, user_3));
+        }
+
+        /* Set minimum threshold. */
+        int MINIMUM_THRESHOLD = 1;
+
+        /* Set maximum threshold. */
+        int MAXIMUM_THRESHOLD = 3;
+
+        /* Verify threshold. */
+        require(
+            within(threshold, MINIMUM_THRESHOLD, MAXIMUM_THRESHOLD + 1)
+        );
+
+        /* Validate ALL thresholds. */
+        // TODO Allow for "unlimited" thresholds.
+        // TODO Add support for separate (Write+Execute) thresholds.
+        if (threshold == 1) {
+            require(
+                tokenid_1 != 0x0 ||
+                tokenid_2 != 0x0 ||
+                tokenid_3 != 0x0
+            );
+        }
+
+        if (threshold == 2) {
+            require(
+                (tokenid_1 != 0x0 || tokenid_2 != 0x0) ||
+                (tokenid_1 != 0x0 || tokenid_3 != 0x0) ||
+                (tokenid_2 != 0x0 || tokenid_3 != 0x0)
+            );
+        }
+
+        if (threshold == 3) {
+            require(
+                tokenid_1 != 0x0 &&
+                tokenid_2 != 0x0 &&
+                tokenid_3 != 0x0
+            );
+        }
+    }
+}

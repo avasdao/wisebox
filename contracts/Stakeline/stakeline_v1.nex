@@ -1,0 +1,63 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ *
+ * Copyright (c) 2023 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Stakeline
+ *
+ * Creates a non-custodial container (ie. smart contract address), to be used
+ * for subscribing to the premium access & services of Nexa dApp.
+ *
+ * The new stakeline will generate a brand new transferrable NFT. It is
+ * commonly required that the NFT be placed into the account which requires
+ * access to the "premium" service offering(s).
+ *
+ * GENERAL NOTES
+ * --------------------
+ * Assets being held (ie. time-locked) in a stakeline:
+ *   1. cannot be transferred until AFTER the subscription (expiration) time.
+ *   2. are 100% under the control of the stakeline patron.
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : STAKEL01
+ *
+ * patron     : Party whom will own & unlock the assets.
+ * expiration : The expiration time (measured in seconds since epoch) when the subscription becomes invalid.
+ *
+ * For more information, please visit the following resources:
+ *   - https://docs.avas.cash/staking
+ *   - https://avasdao.org
+ *
+ * @param expiration
+ * @param patron
+ * @param service
+ * @param stakeid
+ *
+ */
+contract Stakeline(
+    int visible expiration,
+    pubkey visible patron,
+    bytes visible unused serviceid,
+    bytes visible unused stakeid,
+) {
+    /**
+     * Closeout
+     *
+     * Allows a stakeline Patron to remove their assets AFTER their
+     * subscription time has ended.
+     *
+     * @param signature
+     */
+    function closeout(sig signature) {
+        /* Verify UTXO (transaction) time is AFTER the expiration time. */
+        require(tx.time >= expiration);
+
+        /* Verify transaction is signed by the stakeline patron. */
+        require(checkSig(signature, patron));
+    }
+}

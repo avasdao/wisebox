@@ -1,0 +1,67 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ *
+ * Copyright (c) 2023 Ava's DAO
+ * Released under the MIT License.
+ *
+ * WiseBox: The Swiss Army Knife of Smart Contracts
+ *
+ * WiseBox combines tiny versions of many common smart contract utilities into
+ * a single MAST contract. It provides convenient access to the most commonly
+ * used contract utilities.
+ *
+ * WiseBox has been written with size-optimization and limited resources in
+ * mind. It is also extremely efficient due to its use of merkentelized trees.
+ * This makes it easy to simply drop-in to ANY project and GO!
+ *
+ * NOTES
+ * --------------------
+ * The following is a preliminary list of smart contract (utility) methods:
+ *   - timestamp locks
+ *   - block height locks
+ *   - for-loop
+ *   - while-loop
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : WISEBOX01
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://domain.tld
+ *   - https://avasdao.org
+ *
+ * @param owner
+ * @param key
+ * @param value
+ *
+ */
+contract WiseBox(
+    pubkey owner,
+    bytes32 visible key,
+    int visible unused value,
+) {
+    /**
+     * Method Name
+     *
+     * TBD..
+     *
+     * @param owner
+     * @param signature
+     */
+    function transfer(pubkey authorized, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+}

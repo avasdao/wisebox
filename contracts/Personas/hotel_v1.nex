@@ -1,0 +1,121 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ *
+ * Copyright (c) 2023 Modenero DAO
+ * Released under the MIT License.
+ *
+ * Hotel
+ * (a member of the "Wise" Personas suite)
+ *
+ * Manages fees associated with creating new Personas.
+ *
+ * NOTES
+ * --------------------
+ * TBD
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : PHOTEL01
+ *
+ * owner (bytes64) : A Hotel is used to coordinate ALL Concierge activities.
+ *
+ * For more information, please visit the following resources:
+ *   - https://domain.tld
+ *   - https://modenero.com
+ *
+ * @param owner
+ *
+ */
+contract Hotel(bytes64 owner) {
+    /**
+     * Transfer
+     *
+     * Grants permission by one (or up to three) Owner(s) to
+     * transfer assets managed by this Concierge (contract).
+     *
+     * @param user_1
+     * @param user_2
+     * @param user_3
+     * @param signature_1
+     * @param signature_2
+     * @param signature_3
+     */
+    function transfer(
+        pubkey user_1,
+        pubkey user_2,
+        pubkey user_3,
+        sig signature_1,
+        sig signature_2,
+        sig signature_3
+    ) {
+        /* Parse (up to 3) token ids. */
+        bytes64 tokenid_1 = bytes64(hotel.split(64)[0]);
+        bytes64 tokenid_2 = bytes64(hotel.split(128)[0].split(64)[1]);
+        bytes64 tokenid_3 = bytes64(hotel.split(192)[0].split(128)[1]);
+
+        // NOTE: `threshold` is 4-byte integer.
+        int threshold = int(hotel.split(196)[0].split(192)[1]);
+
+        /* Validate 1st user. */
+        if (tokenid_1 != 0x0) {
+            require(hash160(user_1) == tokenid_1); // FIXME: Retrieve owner pubkey from lockingBytecode.
+
+            require(checkSig(signature_1, user_1));
+        }
+
+        /* Validate 2nd user. */
+        if (tokenid_2 != 0x0) {
+            require(hash160(user_2) == tokenid_2); // FIXME: Retrieve owner pubkey from lockingBytecode.
+
+            require(checkSig(signature_2, user_2));
+        }
+
+        /* Validate 3rd user. */
+        if (tokenid_3 != 0x0) {
+            require(hash160(user_3) == tokenid_3); // FIXME: Retrieve owner pubkey from lockingBytecode.
+
+            require(checkSig(signature_3, user_3));
+        }
+
+        /* Set minimum threshold. */
+        int MINIMUM_THRESHOLD = 1;
+
+        /* Set maximum threshold. */
+        int MAXIMUM_THRESHOLD = 3;
+
+        /* Verify threshold. */
+        require(
+            within(threshold, MINIMUM_THRESHOLD, MAXIMUM_THRESHOLD + 1)
+        );
+
+        /* Validate ALL thresholds. */
+        // TODO Allow for "unlimited" thresholds.
+        // TODO Add support for separate (Write+Execute) thresholds.
+        if (threshold == 1) {
+            require(
+                tokenid_1 != 0x0 ||
+                tokenid_2 != 0x0 ||
+                tokenid_3 != 0x0
+            );
+        }
+
+        if (threshold == 2) {
+            require(
+                (tokenid_1 != 0x0 || tokenid_2 != 0x0) ||
+                (tokenid_1 != 0x0 || tokenid_3 != 0x0) ||
+                (tokenid_2 != 0x0 || tokenid_3 != 0x0)
+            );
+        }
+
+        if (threshold == 3) {
+            require(
+                tokenid_1 != 0x0 &&
+                tokenid_2 != 0x0 &&
+                tokenid_3 != 0x0
+            );
+        }
+    }
+}

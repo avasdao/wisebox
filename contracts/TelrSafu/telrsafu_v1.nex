@@ -1,0 +1,85 @@
+pragma nexscript >= 0.2.0;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copyright (c) 2023 Modenero DAO
+ * Released under the MIT License.
+ *
+ * TΞLR Safu
+ *
+ * Empty contract template.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : TELRSAFU01
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://telrsafu.com
+ *   - https://modenero.com
+ *
+ */
+contract TelrWallet(bytes20 owner, int param) {
+    /**
+     * Method Name
+     *
+     * TBD..
+     *
+     * @param owner
+     * @param signature
+     */
+    function transfer(pubkey owner, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify `nLockTime` is: 1) active and 2) checking blocks. */
+        // TODO: Is this necessary for CSV?
+        // source: https://prestwi.ch/bitcoin-time-locks/
+        require(tx.time >= 1);
+
+        /* Verify UTXO age is AFTER the reservation time. */
+        require(tx.age >= reservation);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Recover
+     *
+     * Allows for the recovery of assets, in the case of unplanned custodial
+     * services termination.
+     *
+     * @param owner
+     * @param signature
+     */
+    function recover(pubkey owner, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify `nLockTime` is: 1) active and 2) checking blocks. */
+        // TODO: Is this necessary for CSV?
+        // source: https://prestwi.ch/bitcoin-time-locks/
+        require(tx.time >= 1);
+
+        /* Verify UTXO age is AFTER the reservation time. */
+        require(tx.age >= reservation);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+}

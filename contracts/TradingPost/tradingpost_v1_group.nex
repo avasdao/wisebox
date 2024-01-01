@@ -1,0 +1,153 @@
+pragma nexscript >= 0.2.0;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copyright (c) 2023 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Trading Post (Fungible Edition)
+ *
+ * Allows for a decentralized exchange of $NEXA with ANY other (token) asset,
+ * using a "trustless" atomic swap. There is ZERO risk of either party losing
+ * their asset(s) during the exchange.
+ *
+ * An additional fee may be charged, if there is a Provider added to the
+ * contract's parameters.
+ *
+ * NOTES
+ * --------------------
+ * This contract will ONLY work with Fungible Tokens (FT),
+ * ie. with a 32-bit group id.
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0xCFCBDA2CC2EEEC776BF34AA78EDD5BC0C5DFB1BC
+ * Namespace   : TPOSTG01
+ *
+ * seller : (bytes20) The Seller's public key hash.
+ * rate   : (int)     The rate of exchange, charged by the Seller. (measured in <satoshis> per asset)
+ * admin  : (bytes20) An optional 3rd-party (specified by the Seller) used to administer the transaction.
+ * fee    : (int)     An optional amount charged by the Provider. (measured in <basis points> (bp), eg. 5.25% = 525bp)
+ *
+ * For more information, please visit the following resources:
+ *   - https://docs.causes.cash/trading-post
+ *   - https://avasdao.org
+ *
+ */
+contract TradingPost(
+    bytes20 visible seller,
+    int visible rate,
+    bytes20 visible admin,
+    int visible fee,
+) {
+    /**
+     * Trade (Token) Asset
+     *
+     * Sends the Buyer the requested quantity of an asset, at a rate set
+     * by the contract's owner (ie. the Seller).
+     *
+     * OUTPUTS:
+     *   0. (Required) (Asset) remaining balance OR null data [covenant]
+     *   1. (Required) (NEXA) payment to Seller [covenant]
+     *   2. (Required) (Asset) delivery to Buyer [covenant]
+     *   3. (Optional) (NEXA) Fee paid to Provider [covenant]
+     *   4. (Optional) (NEXA) change
+     */
+    function trade() {
+        /* Set group (token) id. */
+        bytes32 groupid = bytes32(tx.inputs[0].tokenGroupId);
+
+        /* Verify Buyer asset. */
+        require(tx.outputs[2].tokenGroupId == groupid);
+
+        /* Create Seller bytecode. */
+        // NOTE: Supports ONLY $NEXA assets.
+        bytes23 sellerBytecode = new LockingBytecodeP2PKT(seller);
+
+        /* Verify Seller bytecode. */
+        require(tx.outputs[1].lockingBytecode == sellerBytecode);
+
+        /* Set amount of $NEXA Buyer "paid" to contract. */
+        int sellerPayout = tx.outputs[1].value;
+
+        /* Calculate Buyer (asset) delivery quantity. */
+        // NOTE: Wallet MUST match any (integer) rounding when constructing
+        //       the transaction.
+        int buyerAssetQty = sellerPayout / rate;
+
+        /* Verify Buyer (asset) payout amount. */
+        require(tx.outputs[2].tokenAmount == buyerAssetQty);
+
+        /* Set available quantity. */
+        int availableQty = tx.inputs[0].tokenAmount;
+
+        /* Token (asset) change). */
+        // NOTE: Verify any remaining assets are transferred back to the contract.
+        // NOTE: If there are NO remaining assets, send NULL data at (0) output.
+        if (buyerAssetQty < availableQty) {
+            /* Parse output (script) prefix, plus 1st holder. */
+            bytes oPrefix, bytes oHolder = tx.outputs[0].lockingBytecode
+                .split(33);
+
+            /* Parse output `tokenAmount` size, plus 2nd holder. */
+            bytes1 oSize, bytes oHolderToo = oHolder.split(1);
+
+            /* Parse output (script) suffix. */
+            // NOTE: Drop the `tokenAmount` value.
+            bytes oSuffix = oHolderToo.split(int(oSize))[1];
+
+            /* Parse input (script) prefix, plus 1st holder. */
+            bytes iPrefix, bytes iHolder = tx.inputs[0].lockingBytecode
+                .split(33);
+
+            /* Parse input `tokenAmount` size, plus 2nd holder. */
+            bytes1 iSize, bytes iHolderToo = iHolder.split(1);
+
+            /* Parse input (script) suffix. */
+            // NOTE: Drop the `tokenAmount` value.
+            bytes iSuffix = iHolderToo.split(int(iSize))[1];
+
+            /* Validate input/output prefix scripts. */
+            require(oPrefix == iPrefix);
+
+            /* Validate input/output suffix scripts. */
+            require(oSuffix == iSuffix);
+        }
+
+        /* Calculate Provider commission amount (received). */
+        int commission = (sellerPayout * fee) / 10000;
+
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify and handle commission payout. */
+        if (commission >= DUST_VALUE) {
+            /* Verify Provider payout amount. */
+            require(tx.outputs[3].value >= commission);
+
+            /* Create Provider bytecode. */
+            // NOTE: Supports ONLY $NEXA assets.
+            bytes23 adminBytecode = new LockingBytecodeP2PKT(admin);
+
+            /* Verify Provider bytecode. */
+            require(tx.outputs[3].lockingBytecode == adminBytecode);
+        }
+
+        /* Set maximum outputs. */
+        int MAXIMUM_OUTPUTS = 5;
+
+        /* Verify (maximum) outputs. */
+        require(tx.outputs.length <= MAXIMUM_OUTPUTS);
+
+        /* Verify (coin) commission -OR- change. */
+        if (tx.outputs.length >= (MAXIMUM_OUTPUTS - 1)) {
+            require(int(tx.outputs[3].tokenGroupId) == 0);
+        }
+
+        /* Verify (coin) change. */
+        if (tx.outputs.length == MAXIMUM_OUTPUTS) {
+            require(int(tx.outputs[4].tokenGroupId) == 0);
+        }
+    }
+}

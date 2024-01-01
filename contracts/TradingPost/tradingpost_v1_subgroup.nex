@@ -1,0 +1,144 @@
+pragma nexscript >= 0.2.0;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copyright (c) 2023 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Trading Post (NFT & SFT Edition)
+ *
+ * Allows for a decentralized exchange of $NEXA with ANY other (token) asset,
+ * using a "trustless" atomic swap. There is ZERO risk of either party losing
+ * their asset(s) during the exchange.
+ *
+ * An additional fee may be charged, if there is a Provider added to the
+ * contract's parameters.
+ *
+ * NOTES
+ * --------------------
+ * This contract will ONLY work with Non/Semi-fungible Tokens (NFT & SFT),
+ * ie. with a 32-bit sub-group id.
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : TPOSTS01
+ *
+ * seller   : (bytes20) The Sellers' public key hash.
+ * cost     : (int)     The cost per item (in $NEXA), charged by the Seller. (measured in <satoshis>)
+ * admin : (bytes20) An optional 3rd-party (specified by the Seller) used to facilitate the transaction.
+ * fee      : (int)     An optional amount charged by the Provider. (measured in <basis points> (bp), eg. 5.25% = 525bp)
+ *
+ * For more information, please visit the following resources:
+ *   - https://docs.causes.cash/trading-post
+ *   - https://avasdao.org
+ *
+ */
+contract TradingPost(
+    bytes32 visible groupid,
+    bytes32 visible subgroupid,
+    bytes20 visible seller,
+    int visible cost,
+    bytes20 visible admin,
+    int visible fee,
+) {
+    /**
+     * Trade (Token) Asset
+     *
+     * Sends the Buyer the requested quantity of an asset, at a rate set
+     * by the contract's owner (ie. the Seller).
+     *
+     * OUTPUTS:
+     *   0. (Required) (Asset) remaining balance OR null data [covenant]
+     *   1. (Required) (NEXA) payment to Seller [covenant]
+     *   2. (Required) (Asset) delivery to Buyer [covenant]
+     *   3. (Optional) (NEXA) Fee paid to Provider [covenant]
+     *   4. (Optional) (NEXA) change
+     */
+    function trade() {
+        /* Verify (primary) group id. */
+        // require(tx.outputs[0].tokenGroupId == tx.inputs[0].tokenGroupId);
+        require(tx.outputs[0].tokenGroupId == groupid);
+
+        /* Set sub-group (token) id. */
+        // bytes32 subgroupid = bytes32(tx.inputs[0].tokenSubgroupId);
+
+        /* Verify Buyer asset. */
+        require(tx.outputs[2].tokenSubgroupId == subgroupid);
+
+        /* Create Seller bytecode. */
+        bytes23 sellerBytecode = new LockingBytecodeP2PKT(seller);
+
+        /* Verify Seller bytecode. */
+        require(tx.outputs[1].lockingBytecode == sellerBytecode);
+
+        /* Set amount of $NEXA Buyer "paid" to contract. */
+        int sellerPayout = tx.outputs[1].value;
+
+        /* Calculate Buyer (asset) delivery quantity. */
+        // NOTE: Wallet MUST match any (integer) rounding when constructing
+        //       the transaction.
+        int buyerAssetQty = sellerPayout / cost;
+
+        /* Verify Buyer (asset) payout amount. */
+        require(tx.outputs[2].tokenAmount == buyerAssetQty);
+
+        /* Set available quantity. */
+        int availableQty = tx.inputs[0].tokenAmount;
+
+        /* Token (asset) change). */
+        // NOTE: Verify any remaining assets are transferred back to the contract.
+        // NOTE: If there are NO remaining assets, send NULL data at (0) output.
+        if (buyerAssetQty < availableQty) {
+            /* Verify locking bytecode. */
+            require(tx.outputs[0].lockingBytecode == tx.inputs[0].lockingBytecode);
+
+            /* Verify group id. */
+            require(tx.outputs[0].tokenGroupId == groupid);
+
+            /* Verify sub-group id. */
+            require(tx.outputs[0].tokenSubgroupId == subgroupid);
+
+            // NOTE: It is NOT necessary to verify `tokenAmount`, as the (asset)
+            //       balance has to go "somewhere"; which also allows the entire
+            //       (asset) balance to be tranferred back to the Seller.
+        }
+
+        /* Calculate Provider commission amount (received). */
+        int commission = (sellerPayout * fee) / 10000;
+
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify and handle commission payout. */
+        if (commission > DUST_VALUE) {
+            /* Verify Provider payout amount. */
+            require(tx.outputs[3].value >= commission);
+
+            /* Create Provider bytecode. */
+            bytes23 adminBytecode = new LockingBytecodeP2PKT(admin);
+
+            /* Verify Provider bytecode. */
+            require(tx.outputs[3].lockingBytecode == adminBytecode);
+        }
+
+        /* Set maximum outputs. */
+        int MAXIMUM_OUTPUTS = 5;
+
+        /* Verify (maximum) outputs. */
+        require(tx.outputs.length <= MAXIMUM_OUTPUTS);
+
+        /* Verify (coin) commission -OR- change. */
+        require(
+            tx.outputs.length == (MAXIMUM_OUTPUTS - 2) ||
+            tx.outputs[3].tokenGroupId == 0x0
+        );
+
+        /* Verify (coin) change. */
+        require(
+            tx.outputs.length == (MAXIMUM_OUTPUTS - 1) ||
+            tx.outputs[4].tokenGroupId == 0x0
+        );
+    }
+}

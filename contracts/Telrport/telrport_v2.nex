@@ -1,0 +1,79 @@
+pragma nexscript >= 0.2.0;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copyright (c) 2023 Modenero DAO
+ * Released under the MIT License.
+ *
+ * Telrport
+ *
+ * A cross-chain bridge contract for Nexa assets.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * 8 Supported Chains
+ * --------------------
+ *   1. Avalanche
+ *   2. Binance Smart Chain
+ *   3. Ethereum
+ *   4. Nexa MetaNet
+ *   5. Polygon
+ *   6. SmartBCH
+ *   7. Solana
+ *   8. Tron
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 02
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : TPORT02
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://domain.tld
+ *   - https://modenero.com
+ *
+ */
+contract Telrport(pubkey admin) {
+    /**
+     * Departure
+     *
+     * Locks and transfers an asset to another blockchain.
+     *
+     * @param owner
+     * @param signature
+     */
+    function departure(int chainid, bytes32 assetid) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Homecoming
+     *
+     * Recovers a previously teleported asset.
+     *
+     * @param owner
+     * @param signature
+     */
+    function homecoming(int chainid, bytes32 assetid) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+}

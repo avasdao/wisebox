@@ -1,0 +1,84 @@
+pragma nexscript >= 0.6.0;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copyright (c) 2023 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Trading Post (Cancel)
+ *
+ * Allows for decentralized swap of $NEXA with ANY other (token) asset.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : TPOST01
+ *
+ * owner      : (bytes20) The sellers' public key hash.
+ * tokenGet   : (bytes32) The token id of the asset.
+ * amountGet  : (int)     The amount of NEXA requested by the seller.
+ * tokenGive  : (bytes32) The token id of the asset.
+ * amountGive : (int)     The amount of NEXA requested by the seller.
+ * admin   : (bytes20) An optional 3rd-party (agreed upon by the Buyer and Seller) used to facilitate the transaction.
+ * fee        : (int)     An optional amount charged by the Provider. (measured in basis points (bp), eg. 5.25% = 525bp)
+ * expires    : (int)     An optional amount charged by the Provider. (measured in basis points (bp), eg. 5.25% = 525bp)
+ *
+ * For more information, please visit the following resources:
+ *   - https://docs.causes.cash/trading-post
+ *   - https://avasdao.org
+ *
+ */
+contract TradingPost(
+    bytes32 visible tokenid,
+    bytes20 visible seller,
+    int visible rate,
+    bytes20 visible admin,
+    int visible fee,
+) {
+    /**
+     * Cancel (Trade) Posting
+     *
+     * Sends all remaining assets back to the contract's owner (ie. the Seller).
+     *
+     * NOTE: For compliance purposes, both the Seller and the Provider have the
+     *       ability to cancel a trade posting.
+     *
+     *       ASSETS CAN ONLY BE SENT TO THE SELLER.
+     *
+     * @param executor
+     * @param signature
+     */
+    function cancel(pubkey executor, sig signature) {
+        /* Verify executor has provided a valid signature. */
+        require(checkSig(signature, executor));
+
+        /* Hash the executor's public key hash. */
+        bytes20 pubKeyHash = hash160(executor);
+
+        /* Verify the executor is an authorized contract participant. */
+        require(pubKeyHash == seller || pubKeyHash == admin);
+
+        /* Validate the 1st output is the Seller's `scriptPubKey`. */
+        int lockingBytecodeLen = tx.outputs[0].lockingBytecode.length;
+        bytes20 sellerBytecode = bytes20(tx.outputs[0].lockingBytecode.split(lockingBytecodeLen - 20)[1]);
+        require(seller == sellerBytecode);
+
+        /* Validate the 1st output is the Seller's asset. */
+        require(tx.outputs[0].tokenGroupId == tokenid);
+
+        /* Set (min/max) constants. */
+        int MIN_OUTPUTS = 1;
+        int MAX_OUTPUTS = 2;
+
+        /* Validate the 2nd (change) output IS NOT the Seller's asset. */
+        require(
+            (tx.outputs.length == MIN_OUTPUTS) ||
+            (tx.outputs.length == MAX_OUTPUTS && tx.outputs[1].tokenGroupId == 0x0)
+        );
+    }
+}

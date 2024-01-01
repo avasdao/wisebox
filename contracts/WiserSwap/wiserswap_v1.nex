@@ -1,0 +1,263 @@
+pragma nexscript >= 0.2.0;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copyright (c) 2023 Ava's DAO
+ * Released under the MIT License.
+ *
+ * WiserSwap
+ *
+ * A "wise" contract implemenation of a Constant Product Market Maker (CPMM)
+ * for Nexa, using a micro pools approach.
+ *
+ * Individual liquidity provider(s) may deploy their own CPMM contract(s) for
+ * managing their own micro pool(s). This design leverages Nexa's UTXO model
+ * and its 100K+ TPS throughput, allowing for unparalled scalability and
+ * efficiency as compared to ANY other modern-day DEX.
+ *
+ * GENERAL NOTES
+ * --------------------
+ * Based on the (CPMM) Cauldron contract by Dagur Valberg Johannsson
+ * (source: https://www.cauldron.quest/_files/ugd/ae85be_b1dc04d2b6b94ab5a200e3d8cd197aa3.pdf)
+ *
+ * Constant Product Property
+ * ----------------------------------------
+ * WiserSwap adheres to the constant product formula:
+ *   K = x * y
+ * where K is the constant value, and x and y represent the quantities of
+ * <Tokens> and <NEXA>, respectively.
+ *
+ * Aggregating Micro Pools
+ * ----------------------------------------
+ * WiserSwap supports aggregation of micro pools to increase liquidity for
+ * trades. Multiple pools can be included in a single Transaction to increase
+ * asset liquidity and swap efficiency.
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0xB3B45264DAD11B2FF9FE5879863457E3737832CE
+ * Namespace   : WISER01
+ *
+ * provider       : (bytes20) Pool owner (aka the Provider) (data) public key hash.
+ * providerRate   : (int)     Rate charged by the Provider. (measured in <basis points> (bp), eg. 5.25% = 525bp)
+ * admin          : (bytes20) A 3rd-party Administrator (specified by the Provider) (data) public key hash; will host & manage the micro pool.
+ * adminFee       : (int)     Fee charged by the Administrator. (measured in <basis points> (bp), eg. 5.25% = 525bp)
+ * baseServiceFee : (int)     A base service fee charged by the contract (used to mitigate spam). (measured in <basis points> (bp), eg. 5.25% = 525bp)
+ * tradeCeiling   : (int)     An optional COINS trade boundry (specified by the Provider); also used to enforce an asset's Foundation (set by its Creator). (measured in <satoshis> per <asset>)
+ * tradeFloor     : (int)     An optional COINS trade boundry (specified by the Provider); also used to enforce an asset's Foundation (set by its Creator). (measured in <satoshis> per <asset>)
+ *
+ * For more information, please visit the following resources:
+ *   - https://docs.nexa.exchange/wiserswap
+ *   - https://avasdao.org
+ *
+ */
+contract WiserSwap(
+    bytes20 visible provider,
+    int visible providerRate,
+    bytes20 visible admin,
+    int visible adminFee,
+    int visible baseServiceFee,
+    int visible tradeCeiling,
+    int visible tradeFloor,
+) {
+    /**
+     * Swap (Pool Assets)
+     *
+     * Allows two (2) assets to be swapped with each other, while maintaining
+     * the same (constant) product within the pool.
+     */
+    function swap() {
+        //----------------------------------------------------------------------
+        // BEGIN LOCKING BYTECODE VERIFICATION (WORKAROUND) FOR GROUPS
+        //----------------------------------------------------------------------
+
+        /* Set Wiser index. */
+        int wiserIdx = this.activeInputIndex;
+
+        /* Parse output (script) prefix, plus 1st holder. */
+        bytes oPrefix, bytes oHolder = tx.outputs[wiserIdx]
+            .lockingBytecode
+            .split(33);
+
+        /* Parse output `tokenAmount` size, plus 2nd holder. */
+        bytes1 oSize, bytes oHolderToo = oHolder.split(1);
+
+        /* Parse output (script) suffix. */
+        // NOTE: Drop the `tokenAmount` value.
+        bytes oSuffix = oHolderToo.split(int(oSize))[1];
+
+        /* Parse input (script) prefix, plus 1st holder. */
+        bytes iPrefix, bytes iHolder = tx.inputs[wiserIdx]
+            .lockingBytecode
+            .split(33);
+
+        /* Parse input `tokenAmount` size, plus 2nd holder. */
+        bytes1 iSize, bytes iHolderToo = iHolder.split(1);
+
+        /* Parse input (script) suffix. */
+        // NOTE: Drop the `tokenAmount` value.
+        bytes iSuffix = iHolderToo.split(int(iSize))[1];
+
+        /* Validate input/output prefix scripts. */
+        require(oPrefix == iPrefix);
+
+        /* Validate input/output suffix scripts. */
+        require(oSuffix == iSuffix);
+
+        //----------------------------------------------------------------------
+        // END LOCKING BYTECODE VERIFICATION (WORKAROUND) FOR GROUPS
+        //----------------------------------------------------------------------
+
+        //----------------------------------------------------------------------
+        // BEGIN CONSTANT PRODUCT VERIFICATION
+        //----------------------------------------------------------------------
+
+        /* Set Wiser (satoshis) input value. */
+        int wiserValueIn = tx.inputs[wiserIdx].value;
+
+        /* Set Wiser (token) input amount. */
+        int wiserAmountIn = tx.inputs[wiserIdx].tokenAmount;
+
+        /* Calculate Wiser (K) input constant. */
+        int wiserConstantIn = wiserValueIn * wiserAmountIn;
+
+        /* Set Wiser (satoshis) output value. */
+        int wiserValueOut = tx.outputs[wiserIdx].value;
+
+        /* Set Wiser (token) output amount. */
+        int wiserAmountOut = tx.outputs[wiserIdx].tokenAmount;
+
+        /* Set Wiser (token) output amount (as basis points). */
+        // int wiserAmountOutBP = wiserAmountOut * BASIS_POINTS;
+
+        /* Calculate Wiser (K) output constant. */
+        int wiserConstantOut = wiserValueOut * wiserAmountOut;
+
+        /* Validate a (minimum) constant product (K) is maintained. */
+        // NOTE: A greater constant product is permitted .. as a BONUS!
+        require(wiserConstantOut >= wiserConstantIn);
+
+        //----------------------------------------------------------------------
+        // END CONSTANT PRODUCT VERIFICATION
+        //----------------------------------------------------------------------
+
+        /**
+         * Validate (additional) inputs & outputs, beyond the included
+         * WiserSwap contract input(s).
+         *
+         * Additional output indexes:
+         *   #1 (requried) Administration fee (in $NEXA) [min: 546 sats]
+         *   #2 (requried) Provider auto-pay fee (in $NEXA) [min: 546 sats]
+         *   #3 (required) Trader change (in $NEXA) -OR- null data (placeholder)
+         */
+        require(tx.outputs.length == tx.inputs.length + 3);
+
+        /* Set (network) dust value. */
+        int DUST_VALUE = 546;
+
+        /* Set basis points (scaling factor). */
+        int BASIS_POINTS = 10000;
+
+        /* Set Provider output index. */
+        int PROVIDER_OUTPUT_IDX = 2;
+
+        /* Set Admin output index. */
+        int ADMIN_OUTPUT_IDX = 3;
+
+        /* Validate base service fee. */
+        baseServiceFee = max(baseServiceFee, DUST_VALUE);
+
+        /* Set Admin bytecode. */
+        // NOTE: Supports ONLY $NEXA assets.
+        bytes23 adminBytecode = new LockingBytecodeP2PKT(admin);
+
+        /* Calculate Admin commission. */
+        int adminCommission = (wiserValueOut * adminFee) / BASIS_POINTS;
+
+        /* Validate Admin commission (dust) value. */
+        adminCommission = max(adminCommission, baseServiceFee);
+
+        /* Set Admin output index. */
+        // NOTE: MUST be 3rd from last output.
+        int adminOutputIdx = tx.outputs.length - ADMIN_OUTPUT_IDX;
+
+        /* Verify Admin (commission) bytecode. */
+        require(tx.outputs[adminOutputIdx].lockingBytecode == adminBytecode);
+
+        /* Verify Admin (commission) amount. */
+        require(tx.outputs[adminOutputIdx].value >= adminCommission);
+
+        /* Set Provider (payout) bytecode. */
+        // NOTE: Supports ONLY $NEXA assets.
+        bytes23 providerBytecode = new LockingBytecodeP2PKT(provider);
+
+        /* Calculate Provider commission. */
+        int providerCommission = (wiserValueOut * providerRate) / BASIS_POINTS;
+
+        /* Validate Provider commission (dust) value. */
+        providerCommission = max(providerCommission, baseServiceFee);
+
+        /* Set provider output index. */
+        // NOTE: MUST be 2nd from last output.
+        int providerOutputIdx = tx.outputs.length - PROVIDER_OUTPUT_IDX;
+
+        /* Verify Provider (payout) bytecode. */
+        require(tx.outputs[providerOutputIdx].lockingBytecode == providerBytecode);
+
+        /* Verify Provider (payout) amount. */
+        require(tx.outputs[providerOutputIdx].value >= providerCommission);
+
+        //----------------------------------------------------------------------
+        // BEGIN TRADE CEILING & FLOOR PROTECTIONS
+        //----------------------------------------------------------------------
+
+        // NOTE: Primarily used to guard the Foundation of a "new" asset
+        //       during the beginning of its life-cycle.
+        //       (see also: https://docs.nexa.exchange/create/foundation)
+
+        /* Calculate $NEXA/$TOKEN ratio. */
+        // NOTE: $NEXA is the currency used for ALL fee calculations.
+        // int assetsRatio = (wiserValueOut * BASIS_POINTS) / wiserAmountOut;
+        int assetsRatio = wiserValueOut / wiserAmountOut;
+
+        /* Validate (optional) trade ceiling. */
+        if (tradeCeiling != 0) {
+            /* Validate $TOKEN/$NEXA ratio vs trade floor. */
+            require(assetsRatio <= tradeCeiling);
+        }
+
+        /* Validate (optional) trade floor. */
+        if (tradeFloor != 0) {
+            /* Validate $TOKEN/$NEXA ratio vs trade floor. */
+            require(assetsRatio >= tradeFloor);
+        }
+
+        //----------------------------------------------------------------------
+        // END TRADE CEILING & FLOOR PROTECTIONS
+        //----------------------------------------------------------------------
+    }
+
+    /**
+     * Manage (Pool)
+     *
+     * Liquidity providers can manage assets held in the pool contract, eg.
+     *   1. Withdraw all funds.
+     *   2. Re-balance the pool (aka adjust the price).
+     *
+     * NOTE: ONLY the pool's (owner) Provider can perform this action.
+     */
+    function manage(pubkey authorized, sig signature) {
+        /* Calculate authorized (public key) hash. */
+        // NOTE: Must match `PUSH AsData(PUSH pubkey)` specification found at
+        //       https://spec.nexa.org/nexa/scriptTemplates.
+        bytes20 authorizedHash = hash160(
+            bytes(authorized.length) + authorized);
+
+        /* Validate authorized provider. */
+        require(authorizedHash == provider);
+
+        /* Validate transaction signature. */
+        require(checkSig(signature, authorized));
+    }
+}

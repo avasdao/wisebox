@@ -1,0 +1,68 @@
+pragma nexscript >= 0.6.0;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copyright (c) 2023 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Trading Post
+ *
+ * Allows for decentralized swap of ANY (token) asset with ANY other
+ * (token) asset.
+ *
+ * NOTES
+ * --------------------
+ * Utilizes Merklized Abstract Syntax Trees (MAST) for very efficient and
+ * privacy-preserving contract (Script) execution(s).
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 02
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : TPOST02
+ *
+ * owner      : (bytes20) The sellers' public key hash.
+ * tokenGet   : (bytes32) The token id of the asset.
+ * amountGet  : (int)     The amount of NEXA requested by the seller.
+ * tokenGive  : (bytes32) The token id of the asset.
+ * amountGive : (int)     The amount of NEXA requested by the seller.
+ * admin   : (bytes20) An optional 3rd-party (agreed upon by the Buyer and Seller) used to facilitate the transaction.
+ * fee        : (int)     An optional amount charged by the Provider. (measured in basis points (bp), eg. 5.25% = 525bp)
+ * expires    : (int)     An optional amount charged by the Provider. (measured in basis points (bp), eg. 5.25% = 525bp)
+ *
+ * For more information, please visit the following resources:
+ *   - https://docs.causes.cash/trading-post
+ *   - https://avasdao.org
+ *
+ */
+contract TradingPost(
+    bytes20 visible unused owner,
+    bytes32 visible unused tokenGet,
+    int visible unused amountGet,
+    bytes32 visible unused tokenGive,
+    int visible unused amountGive,
+    bytes20 visible unused admin,
+    int visible unused fee,
+    int visible unused expires,
+) {
+    /**
+     * Cancel
+     *
+     * Cancel the trading contract and return asset(s) to Seller.
+     */
+    import './tradingpost_v2_cancel.nex';
+
+    /**
+     * Group Trade
+     *
+     * Trade a standard group token.
+     */
+    import './tradingpost_v2_group.nex';
+
+    /**
+     * Subgroup Trade
+     *
+     * Trade a sub(child-) group token.
+     */
+    import './tradingpost_v2_subgroup.nex';
+}

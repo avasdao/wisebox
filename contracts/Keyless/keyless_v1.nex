@@ -1,0 +1,58 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ *
+ * Copyright (c) 2023 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Keyless
+ *
+ * Removes all dependencies on seed phrases and private keys for blockchain
+ * transaction authorizations; thereby offering an improved user experience.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : KEYLESS01
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://domain.tld
+ *   - https://avasdao.org
+ *
+ * @param owner
+ * @param key
+ * @param value
+ *
+ */
+contract Keyless(
+    pubkey owner,
+    bytes32 key,
+    int value,
+) {
+    /**
+     * Method Name
+     *
+     * TBD..
+     *
+     * @param owner
+     * @param signature
+     */
+    function authorize(pubkey owner, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+}

@@ -1,0 +1,86 @@
+pragma nexscript >= 0.6.0;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copyright (c) 2023 Ava's DAO
+ * Released under the MIT License.
+ *
+ * WiserSwap
+ *
+ * Empty contract template.
+ *
+ * NOTES
+ * --------------------
+ * Based on the Uniswap v3 protocol.
+ * (source: https://docs.uniswap.org/)
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 02
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : WISER02
+ *
+ * provider    : (pubkey)  The Provider's FULL public key.
+ * providerFee : (int)     An optional amount charged by the Owner. (measured in <basis points> (bp), eg. 5.25% = 525bp)
+ * autoPayout  : (int)     An optional (fee) value (in satoshis) that will trigger an auto-payment to the Owner.
+ * guardian : (int) An optional (foundation) Guardian (specified by the Provider) to enforce the trade boundries.
+ *
+ * For more information, please visit the following resources:
+ *   - https://domain.tld
+ *   - https://avasdao.org
+ *
+ */
+contract WiserSwap(
+    pubkey visible owner,
+    int visible ownerFee,
+    int visible autoPayout,
+    bytes20 visible payout,
+    bytes20 visible provider,
+    int visible providerFee,
+    pubkey visible guardian,
+) {
+    /**
+     * Method Name
+     *
+     * TBD..
+     *
+     * @param owner
+     * @param signature
+     */
+    function transfer(pubkey owner, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+
+        //----------------------------------------------------------------------
+        // BEGIN GUARDIAN PROTECTION
+        //----------------------------------------------------------------------
+
+        /* Validate (optional) guardian key. */
+        // NOTE: Primarily used to guard the Foundation of a "new" asset
+        //       during the beginning of its life-cycle.
+        //       (see also: https://docs.nexa.exchange/create/foundation)
+        if (bytes(guardian) != 0x0) {
+            /* Validate swap w/ Admin (during probation period). */
+            require(checkDataSig(guardianSig, guardianMsg, guardian));
+
+            /* Calculate (foundation) ratio. */
+            int ratio = wiserValueOut / wiserAmountOut;
+
+            /* Validate guardian (ratio) message. */
+            require(ratio >= int(guardianMsg.split(8)[0]));
+
+            /* Validate guardian (tx idem) message. */
+            require(tx.idem == guardianMsg.split(8)[1]);
+        }
+
+        //----------------------------------------------------------------------
+        // END GUARDIAN PROTECTION
+        //----------------------------------------------------------------------
+    }
+}

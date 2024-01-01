@@ -1,0 +1,60 @@
+pragma nexscript >= 0.2.0;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copyright (c) 2023 Modenero DAO
+ * Released under the MIT License.
+ *
+ * Telrport Quorum
+ *
+ * An authorization hash for the next Telrport quorum.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 02
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : TPORTQ02
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://domain.tld
+ *   - https://modenero.com
+ *
+ */
+contract TelrportQuorum() {
+    /**
+     * Authorize (Transaction)
+     *
+     * Four (4) security rings guard against unauthorized transactions.
+     *   #1 - MetaNet Validators              (No Limit) (Hi Threshold)
+     *   #2 - TΞLR Administration             (Lo Limit) (Hi Threshold)
+     *   #3 - Nexican Security Council (NSC)  (Hi Limit) (Lo Threshold)
+     *   #4 - TΞLR Administration             (No Limit) (No Threshold)
+     *
+     * NOTE: Requires input (index) #1 to be from the same transaction.
+     */
+    function authorize() {
+        /* Set (fixed) input position. */
+        require(this.activeInputIndex == 2);
+
+        require(tx.outputs[2].lockingBytecode == tx.inputs[2].lockingBytecode);
+        require(tx.outputs[2].tokenGroupId == tx.inputs[2].tokenGroupId);
+
+        /* Tether to input (index) #1. */
+        require(tx.inputs[2].outpointTransactionHash == tx.inputs[1].outpointTransactionHash);
+
+        // TODO Add 1st time-lock at 1 block (~2 minutes) (MetaNet Validators).
+
+        // TODO Add 2nd time-lock at 30 blocks (~1 hour) (Admin).
+
+        // TODO Add 3rd time-lock at 240 blocks (~8 hours) (Nexican Security Council).
+
+        // TODO Add 4th (final) time-lock at 5,000 blocks (~7 days) (Admin).
+    }
+}
