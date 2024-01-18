@@ -50,19 +50,19 @@ contract TradingPost(
      *
      * Cancel the trading contract and return asset(s) to Seller.
      */
-    import './tradingpost_v2_cancel.nex';
+    import './Cancel.nex';
 
     /**
      * Group Trade
      *
      * Trade a standard group token.
      */
-    import './tradingpost_v2_group.nex';
+    import './TradingPost_Group.nex';
 
     /**
      * Subgroup Trade
      *
      * Trade a sub(child-) group token.
      */
-    import './tradingpost_v2_subgroup.nex';
+    import './TradingPost_Subgroup.nex';
 }
