@@ -5,7 +5,7 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2023 Ava's DAO
  * Released under the MIT License.
  *
- * Royalties
+ * Royalty
  *
  * Permits an NFT creator to guarantee a specific (royalty) tax is paid
  * whenever the asset is transferred to a new UTXO.
@@ -28,7 +28,7 @@ pragma nexscript >= 0.2.0;
  *
  * Version     : 01
  * Script Hash : 0x0000000000000000000000000000000000000000
- * Namespace   : PAYME01
+ * Namespace   : ROYALTY01
  *
  * owner       : Party whom will receive the payouts.
  * reservation : The number of (512 second) cycles until expiration.
