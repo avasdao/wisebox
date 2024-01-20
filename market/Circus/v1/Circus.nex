@@ -1,0 +1,99 @@
+pragma nexscript >= 0.2.0;
+
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Copyright (c) 2023 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Circus — is an auction contract designed for very
+ * exclusive and limited edition collections that offer asset quantities usually
+ * numbering in the single (1 - 9) digits.
+ *
+ * Most notably, once a Circus has begun, it CANNOT be stopped.
+ *
+ * NOTES
+ * --------------------
+ * The Administration will ALWAYS seek to maximize profit; therefore
+ * if any (higher) bid is received AFTER the expiration, but BEFORE
+ * the Ringmaster payout (perhaps due to restriction imposed by
+ * blockchain time-locks), the HIGHEST bid will ALWAYS be taken.
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : CIRCUS01
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://docs.causes.cash/circus
+ *   - https://avasdao.org
+ *
+ */
+contract Circus(
+    bytes32 key,
+    int value,
+    pubkey owner,
+
+    int blockInterval,
+) {
+    /**
+     * Finale
+     *
+     * Payout the highest bidding UTXO to the Recipient.
+     *
+     * @param owner
+     * @param signature
+     */
+    function finale(pubkey owner, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Reclaim
+     *
+     * Allows a bidder to reclaim their bid amount.
+     *
+     * @param owner
+     * @param signature
+     */
+    function reclaim(sig signature) {
+        /* Set dust value. */
+        // int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(key == bytes(0) && value == 0);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Refund
+     *
+     * Alllows the bidder to Claim their asset, in exchange for the agreed
+     * upon amount.
+     *
+     * @param owner
+     * @param signature
+     */
+    function refund(pubkey owner, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+}
