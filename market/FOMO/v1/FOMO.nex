@@ -2,18 +2,20 @@ pragma nexscript >= 0.2.0;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * Copyright (c) 2023 Ava's DAO
+ * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * Fomo (Fear of missing out) — is an auction contract designed for very
+ * FOMO (Fear of missing out) — is an auction contract designed for very
  * exclusive and limited edition collections that offer asset quantities usually
  * numbering in the single (1 - 9) digits.
  *
- * Empty contract template.
+ * Used by freely staking a "specially crafted" token, made available
+ * especially for a specific event. This token MUST have a FIXED supply
+ * that can be traded on the FOMO Exchange for distribution.
  *
  * NOTES
  * --------------------
- * TBD..
+ * FOMO DEX is 100% compatible with the WiserSwap decentralized front-end.
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -29,7 +31,7 @@ pragma nexscript >= 0.2.0;
  *   - https://avasdao.org
  *
  */
-contract Fomo(bytes32 key, int value, pubkey owner) {
+contract FOMO(bytes32 key, int value, pubkey owner) {
     /**
      * Reclaim
      *

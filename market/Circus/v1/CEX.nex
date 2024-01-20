@@ -5,9 +5,10 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * Cutting Board
+ * Circus Exchange (CEX)
  *
- * Allows a selection from the TOP candidates ONLY.
+ * Uses a price oracle to "fairly" distribute a group of assets to the
+ * largest set of token stakers.
  *
  * NOTES
  * --------------------
@@ -17,7 +18,7 @@ pragma nexscript >= 0.2.0;
  *
  * Version     : 01
  * Script Hash : 0x0000000000000000000000000000000000000000
- * Namespace   : CUT01
+ * Namespace   : CEX01
  *
  * owner : Party whom will receive the payouts.
  * param : A very useful parameter.
@@ -31,7 +32,7 @@ pragma nexscript >= 0.2.0;
  * @param value
  *
  */
-contract Blank(
+contract CEX(
     pubkey owner,
     bytes32 visible key,
     int visible unused value,

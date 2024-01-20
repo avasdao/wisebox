@@ -2,7 +2,7 @@ pragma nexscript >= 0.2.0;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * Copyright (c) 2023 Ava's DAO
+ * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
  * Circus — is an auction contract designed for very
@@ -33,9 +33,10 @@ pragma nexscript >= 0.2.0;
  *
  */
 contract Circus(
+    bytes32 ownerHash,
+    bytes32 rmHash,
     bytes32 key,
     int value,
-    pubkey owner,
 
     int blockInterval,
 ) {
@@ -54,6 +55,16 @@ contract Circus(
         /* Verify parameter. */
         require(param >= DUST_VALUE);
 
+        int idxLucky = this.activeInputIndex;
+
+        require(idxLucky === 1);
+
+        bytes32 licenseid = tx.inputs[0].outpointTransactionHash;
+
+        bytes32 rmLocks = tx.inputs[0].lockingBytecode;
+
+        bytes32 luckyLocks = tx.inputs[idxLucky].lockingBytecode;
+
         /* Verify transaction is signed by the owner. */
         require(checkSig(signature, owner));
     }
@@ -66,12 +77,8 @@ contract Circus(
      * @param owner
      * @param signature
      */
-    function reclaim(sig signature) {
-        /* Set dust value. */
-        // int DUST_VALUE = 546;
-
-        /* Verify parameter. */
-        require(key == bytes(0) && value == 0);
+    function reclaim(pubkey owner, sig signature) {
+        // TODO Validate pubkey matches ownerHash.
 
         /* Verify transaction is signed by the owner. */
         require(checkSig(signature, owner));
