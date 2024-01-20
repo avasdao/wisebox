@@ -9,14 +9,13 @@ pragma nexscript >= 0.2.0;
  * exclusive and limited edition collections that offer asset quantities usually
  * numbering in the single (1 - 9) digits.
  *
- * Most notably, once a Circus has begun, it CANNOT be stopped.
+ * Used by freely staking a "specially crafted" token, made available
+ * especially for a specific event. This token MUST have a FIXED supply
+ * that can be traded on the FOMO Exchange for distribution.
  *
  * NOTES
  * --------------------
- * The Administration will ALWAYS seek to maximize profit; therefore
- * if any (higher) bid is received AFTER the expiration, but BEFORE
- * the Ringmaster payout (perhaps due to restriction imposed by
- * blockchain time-locks), the HIGHEST bid will ALWAYS be taken.
+ * TBD
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *

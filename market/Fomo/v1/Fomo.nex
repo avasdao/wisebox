@@ -5,17 +5,15 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * FOMO (Fear of missing out) — is an auction contract designed for very
- * exclusive and limited edition collections that offer asset quantities usually
- * numbering in the single (1 - 9) digits.
+ * Fomo (Fear of missing out) — is an auction contract designed to allow
+ * those with "paper hands" to buy in early and those with "diamond hands"
+ * to hold-out for better opportunities.
  *
- * Used by freely staking a "specially crafted" token, made available
- * especially for a specific event. This token MUST have a FIXED supply
- * that can be traded on the FOMO Exchange for distribution.
+ * Most notably, once a Circus has begun, it CANNOT be stopped.
  *
  * NOTES
  * --------------------
- * FOMO DEX is 100% compatible with the WiserSwap decentralized front-end.
+ * TBD
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -31,16 +29,16 @@ pragma nexscript >= 0.2.0;
  *   - https://avasdao.org
  *
  */
-contract FOMO(bytes32 key, int value, pubkey owner) {
+contract Fomo(bytes32 key, int value, pubkey owner) {
     /**
-     * Reclaim
+     * Capture
      *
-     * Allows a bidder to reclaim their bid amount.
+     * Allows a Bidder to claim against the current asset Holder.
      *
      * @param owner
      * @param signature
      */
-    function reclaim(sig signature) {
+    function capture(sig signature) {
         /* Set dust value. */
         // int DUST_VALUE = 546;
 
@@ -52,7 +50,7 @@ contract FOMO(bytes32 key, int value, pubkey owner) {
     }
 
     /**
-     * Collect
+     * Victory
      *
      * Alllows the bidder to Claim their asset, in exchange for the agreed
      * upon amount.
@@ -60,14 +58,14 @@ contract FOMO(bytes32 key, int value, pubkey owner) {
      * @param owner
      * @param signature
      */
-    // function collect(pubkey owner, sig signature) {
-    //     /* Set dust value. */
-    //     int DUST_VALUE = 546;
-    //
-    //     /* Verify parameter. */
-    //     require(param >= DUST_VALUE);
-    //
-    //     /* Verify transaction is signed by the owner. */
-    //     require(checkSig(signature, owner));
-    // }
+    function victory(pubkey owner, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
 }
