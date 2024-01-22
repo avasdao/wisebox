@@ -29,7 +29,13 @@ pragma nexscript >= 0.2.0;
  *   - https://avasdao.org
  *
  */
-contract Fomo(bytes32 key, int value, pubkey owner) {
+contract Fomo(
+    int poison,
+    int curfew,
+    int fear,
+    bytes20 promoter,
+    bytes20 admin,
+) {
     /**
      * Capture
      *
@@ -50,15 +56,61 @@ contract Fomo(bytes32 key, int value, pubkey owner) {
     }
 
     /**
-     * Victory
+     * Add Poison Pill
      *
-     * Alllows the bidder to Claim their asset, in exchange for the agreed
-     * upon amount.
+     * Allows the current Holder to add a "poison pill" amount
+     * to the contract that is required to be paid (in addition)
+     * to the last Bidding price. The final Holder can use the antidote
+     * and redeem the full poison pill.
+     *
+     * NOTE: Poison pill is NOT refundable unless you are the
+     *       FINAL token Holder.
      *
      * @param owner
      * @param signature
      */
-    function victory(pubkey owner, sig signature) {
+    function poison(pubkey owner, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        // TODO Change (final) params to indicate NEW amount.
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Antidote
+     *
+     * Allows the current (final) Holder to redeem the full poison pill.
+     *
+     * @param owner
+     * @param signature
+     */
+    function antidote(pubkey owner, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Liberate
+     *
+     * Alllows the Bidder to free their asset new asset from
+     * the contract's confines.
+     *
+     * @param owner
+     * @param signature
+     */
+    function liberate(pubkey owner, sig signature) {
         /* Set dust value. */
         int DUST_VALUE = 546;
 
