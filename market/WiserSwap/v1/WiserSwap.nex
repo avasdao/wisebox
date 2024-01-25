@@ -166,7 +166,9 @@ contract WiserSwap(
         /* Set Admin output index. */
         int ADMIN_OUTPUT_IDX = 3;
 
-        int ADMIN_FEE = 100; // NOTE: Hard-code 100 (1.00%) due to bug??
+        /* Set Admin fee. */
+        // NOTE: Hard-code 100 (1.00%) due to bug??
+        int ADMIN_FEE = 100;
 
         /* Validate base service fee. */
         // baseServiceFee = max(baseServiceFee, DUST_VALUE);
