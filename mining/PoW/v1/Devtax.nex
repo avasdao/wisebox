@@ -5,21 +5,19 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * Tariff PoW (Proof-of-Work)
+ * Devtax PoW (Proof-of-Work)
  *
  * A proof-of-work (PoW) mining "wise" contract.
  *
  * NOTES
  * --------------------
- * Based on the MistCoin Simple Ledger Protocol (SLP) mining contract
- * introduced on the Bitcoin Cash (BCH) in 2020.
- * (see https://mazetoken.github.io/mminer/Mistcoin-archive/Mistcoin.html)
+ * TBD..
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * Version     : 01
  * Script Hash : 0x0000000000000000000000000000000000000000
- * Namespace   : TARPOW01
+ * Namespace   : TAXPOW01
  *
  * owner : Party whom will receive the payouts.
  * param : A very useful parameter.
@@ -33,7 +31,7 @@ pragma nexscript >= 0.2.0;
  * @param value
  *
  */
-contract Tariff(
+contract Devtax(
     int visible epoch,
     int visible speed,
     int visible rewards,

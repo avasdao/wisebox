@@ -12,7 +12,8 @@ pragma nexscript >= 0.2.0;
  *
  * NOTES
  * --------------------
- * TBD..
+ * The hybrid model offers the option of CPU & GPU modes of operation. Or
+ * a dual-mode which can switch back-and-forth.
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -20,14 +21,19 @@ pragma nexscript >= 0.2.0;
  * Script Hash : 0x0000000000000000000000000000000000000000
  * Namespace   : HYPOW01
  *
- * owner : Party whom will receive the payouts.
- * algo  : A dynamic algorithm designed to ONLY be revealed AFTER submission. (MUST use a nonce when repeating algos)
+ * epoch : Number of total blocks mined.
+ * speed : Number of blocks mined in the last 24 hours (avg is 360 or 1/2 of Nexa).
+ * rewards : Amount of rewards distributed per block.
+ * algo  : A (dynamic) algorithm designed to ONLY be revealed AFTER submission. (MUST use a nonce when repeating algos)
+ * admin : The asset Administrator.
+ * treasury : Destination for all fees, set by the Administrator.
+ * maintenance : Asset maintenance fee, set by the Administrator.
  *
  * For more information, please visit the following resources:
  *   - https://domain.tld
  *   - https://avasdao.org
  *
- * @param owner
+ * @param epoch
  * @param key
  * @param value
  *
@@ -46,10 +52,10 @@ contract Hybrid(
      *
      * Mint a NEW proof-of-work token, based on the rewards schedule.
      *
-     * @param owner
-     * @param signature
+     * @param solution
+     * @param miner
      */
-    function mint(bytes solution) {
+    function mint(bytes solution, bytes20 miner) {
         /* Set mining rewards value. */
         // NOTE: This is hard-coded and CANNOT be changed EVER!!
         int MINING_REWARDS = 123;
@@ -66,18 +72,44 @@ contract Hybrid(
     }
 
     /**
-     * Manage
+     * Set (CPU) Algorithm
      *
-     * Perform administrative functions:
-     *   - update maintenance fee
+     * NOTE: This will be executed after EVERY (GPU) block reward,
+     *       when operating in "hybrid-hosted" mode.
      *
-     * @param owner
-     * @param signature
+     * @param algo
      */
-    function manage(
+    function setAlgo(bytes20 algo) {
+        /* Set authorized sub-group id. */
+        bytes authorized = tx.inputs[1].tokenSubgroupId;
+
+        require(hash160(authorized) == admin);
+    }
+
+    /**
+     * (Emergency) Override
+     *
+     * @param speed
+     * @param rewards
+     */
+    function override(
         int speed,
         int rewards,
-        bytes20 algo,
+    ) {
+        /* Set authorized sub-group id. */
+        bytes authorized = tx.inputs[1].tokenSubgroupId;
+
+        require(hash160(authorized) == admin);
+    }
+
+    /**
+     * Update Management (Authority)
+     *
+     * @param admin
+     * @param treasury
+     * @param maintenance
+     */
+    function manage(
         bytes20 admin,
         bytes20 treasury,
         int maintenance,
