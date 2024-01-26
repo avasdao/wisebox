@@ -5,9 +5,9 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * Proof-of-Work
+ * Genesis PoW (Proof-of-Work)
  *
- * A PoW mining contract.
+ * A proof-of-work (PoW) mining "wise" contract.
  *
  * NOTES
  * --------------------
@@ -19,7 +19,7 @@ pragma nexscript >= 0.2.0;
  *
  * Version     : 01
  * Script Hash : 0x0000000000000000000000000000000000000000
- * Namespace   : POW01
+ * Namespace   : GENPOW01
  *
  * owner : Party whom will receive the payouts.
  * param : A very useful parameter.
@@ -33,10 +33,14 @@ pragma nexscript >= 0.2.0;
  * @param value
  *
  */
-contract PoW(
-    int visible iteration,
-    bytes32 visible rewards,
-    bytes32 visible admin,
+contract Genesis(
+    int visible epoch,
+    int visible speed,
+    int visible rewards,
+    bytes20 visible algo,
+    bytes20 visible admin,
+    bytes20 visible treasury,
+    int visible maintenance,
 ) {
     /**
      * Mint
@@ -53,19 +57,20 @@ contract PoW(
         /* Verify parameter. */
         require(param >= DUST_VALUE);
 
-        /* Verify transaction is signed by the owner. */
-        require(checkSig(signature, owner));
+        if (maintenance > 0) {
+            // TODO
+        }
     }
 
     /**
-     * Iterate
+     * Move to Next (Block)
      *
      * Iterates the mining engine after each Nexa block.
      *
      * @param owner
      * @param signature
      */
-    function iterate() {
+    function moveNext() {
         /* Set dust value. */
         int DUST_VALUE = 546;
 
@@ -79,19 +84,23 @@ contract PoW(
     /**
      * Manage
      *
-     * TBD..
+     * Perform administrative functions:
+     *   - update maintenance fee
      *
      * @param owner
      * @param signature
      */
-    function manage() {
-        /* Set dust value. */
-        int DUST_VALUE = 546;
+    function manage(
+        int speed,
+        int rewards,
+        bytes20 algo,
+        bytes20 admin,
+        bytes20 treasury,
+        int maintenance,
+    ) {
+        /* Set authorized sub-group id. */
+        bytes authorized = tx.inputs[1].tokenSubgroupId;
 
-        /* Verify parameter. */
-        require(param >= DUST_VALUE);
-
-        /* Verify transaction is signed by the owner. */
-        require(checkSig(signature, owner));
+        require(hash160(authorized) == admin);
     }
 }
