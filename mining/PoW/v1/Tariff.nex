@@ -5,7 +5,7 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * Genesis PoW (Proof-of-Work)
+ * Tariff PoW (Proof-of-Work)
  *
  * A proof-of-work (PoW) mining "wise" contract.
  *
@@ -19,7 +19,7 @@ pragma nexscript >= 0.2.0;
  *
  * Version     : 01
  * Script Hash : 0x0000000000000000000000000000000000000000
- * Namespace   : GENPOW01
+ * Namespace   : TARPOW01
  *
  * owner : Party whom will receive the payouts.
  * param : A very useful parameter.
@@ -33,10 +33,13 @@ pragma nexscript >= 0.2.0;
  * @param value
  *
  */
-contract Genesis(
+contract Tariff(
     int visible epoch,
     int visible speed,
     int visible rewards,
+    bytes20 visible admin,
+    bytes20 visible treasury,
+    int visible maintenance,
 ) {
     /**
      * Method Name

@@ -1,0 +1,90 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ *
+ * Copyright (c) 2024 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Hybrid PoW (Proof-of-Work)
+ *
+ * A hybrid proof-of-work (PoW) mining "wise" contract; designed to operate
+ * in either self-running OR hosted mode.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : HYPOW01
+ *
+ * owner : Party whom will receive the payouts.
+ * algo  : A dynamic algorithm designed to ONLY be revealed AFTER submission. (MUST use a nonce when repeating algos)
+ *
+ * For more information, please visit the following resources:
+ *   - https://domain.tld
+ *   - https://avasdao.org
+ *
+ * @param owner
+ * @param key
+ * @param value
+ *
+ */
+contract Hybrid(
+    int visible epoch,
+    int visible speed,
+    int visible rewards,
+    bytes20 visible algo,
+    bytes20 visible admin,
+    bytes20 visible treasury,
+    int visible maintenance,
+) {
+    /**
+     * Mint
+     *
+     * Mint a NEW proof-of-work token, based on the rewards schedule.
+     *
+     * @param owner
+     * @param signature
+     */
+    function mint(bytes solution) {
+        /* Set mining rewards value. */
+        // NOTE: This is hard-coded and CANNOT be changed EVER!!
+        int MINING_REWARDS = 123;
+
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        if (maintenance > 0) {
+            // TODO
+        }
+    }
+
+    /**
+     * Manage
+     *
+     * Perform administrative functions:
+     *   - update maintenance fee
+     *
+     * @param owner
+     * @param signature
+     */
+    function manage(
+        int speed,
+        int rewards,
+        bytes20 algo,
+        bytes20 admin,
+        bytes20 treasury,
+        int maintenance,
+    ) {
+        /* Set authorized sub-group id. */
+        bytes authorized = tx.inputs[1].tokenSubgroupId;
+
+        require(hash160(authorized) == admin);
+    }
+}
