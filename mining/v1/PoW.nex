@@ -1,0 +1,97 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ *
+ * Copyright (c) 2024 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Proof-of-Work
+ *
+ * A PoW mining contract.
+ *
+ * NOTES
+ * --------------------
+ * Based on the MistCoin Simple Ledger Protocol (SLP) mining contract
+ * introduced on the Bitcoin Cash (BCH) in 2020.
+ * (see https://mazetoken.github.io/mminer/Mistcoin-archive/Mistcoin.html)
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : POW01
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://domain.tld
+ *   - https://avasdao.org
+ *
+ * @param owner
+ * @param key
+ * @param value
+ *
+ */
+contract PoW(
+    int visible iteration,
+    bytes32 visible rewards,
+    bytes32 visible admin,
+) {
+    /**
+     * Mint
+     *
+     * Mint a NEW proof-of-work token, based on the rewards schedule.
+     *
+     * @param owner
+     * @param signature
+     */
+    function mint() {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Iterate
+     *
+     * Iterates the mining engine after each Nexa block.
+     *
+     * @param owner
+     * @param signature
+     */
+    function iterate() {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Manage
+     *
+     * TBD..
+     *
+     * @param owner
+     * @param signature
+     */
+    function manage() {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+}

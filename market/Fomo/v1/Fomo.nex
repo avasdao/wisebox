@@ -13,7 +13,8 @@ pragma nexscript >= 0.2.0;
  *
  * NOTES
  * --------------------
- * TBD
+ * Half the value of the asset is "shared" back to the community of
+ * active participants via an "incentivized game" of King of the Hill.
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
@@ -34,12 +35,13 @@ pragma nexscript >= 0.2.0;
  *
  */
 contract Fomo(
-    bytes20 fearless,
-    bytes8 hysteria,
-    bytes20 inciter,
-    bytes20 admin,
-    int fearFactor,
-    int curfew,
+    bytes20 visible fearless,
+    // bytes8 visible hysteria,
+    bytes20 visible inciter,
+    bytes20 visible admin,
+    int visible adminFee,
+    int visible fearFactor,
+    int visible curfew,
 ) {
     /**
      * Capture
@@ -60,14 +62,17 @@ contract Fomo(
         /* Initialize Admin fee. */
         // NOTE: This is hard-coded to save space due to Rostrum bug.
         // NOTE: 300 is equal to 3.00%.
-        int ADMIN_FEE = 300;
+        // int ADMIN_FEE = 300;
 
         /* Initialize minimum patience. */
         int MIN_PATIENCE = 1;
 
+        /* Set Fomo index. */
+        int fomoIdx = this.activeInputIndex;
+
         /* Set previous (satoshis) hysteria. */
         // int prevHysteria = tx.inputs[0].value;
-        int prevHysteria = int(hysteria);
+        int prevHysteria = tx.inputs[fomoIdx].value * 2;
 
         /* Set new (satoshis) hysteria. */
         // NOTE: Aggregate of previous Fearless and Inciter outputs.
@@ -78,23 +83,21 @@ contract Fomo(
 
 
         /* Parse Fomo unlockcing script. */
-        bytes iLocking = tx.inputs[0].lockingBytecode;
+        // bytes iLocking = tx.inputs[0].lockingBytecode;
 
-        int hysteriaLen = this.activeBytecode
-            .split(33)[0] // NOTE: Parse the `fearless` pubkeyhash
-            .split(1)[0]; // NOTE: Remove the length (prefix).
+        // int hysteriaLen = this.activeBytecode
+        //     .split(33)[0] // NOTE: Parse the `fearless` pubkeyhash
+        //     .split(1)[0]; // NOTE: Remove the length (prefix).
 
         /* Calculate position of "visible" locking parameters. */
-        int lockingpParamsPos = 34 + hysteriaLen;
+        // int lockingpParamsPos = 34 + hysteriaLen;
 
         /* Parse Fomo locking script. */
         bytes oLocking = bytes(newFearless.length) + newFearless +
-            bytes(bytes(newHysteria).length) + bytes(newHysteria) +
-            this.activeBytecode.split(lockingpParamsPos)[1];
-
+            this.activeBytecode.split(33)[1];
 
         /* Verify Fomo locks are preserved. */
-        require(tx.outputs[0].lockingBytecode = oLocking);
+        require(tx.outputs[0].lockingBytecode == oLocking);
 
         /* Verify number of outputs. */
         // NOTE: We ONLY expect the asset (plus optional change).
@@ -128,11 +131,11 @@ contract Fomo(
             //        "fair play" amongst participants.
             patience = 1;
         } else {
-            int fearMultiplier = ((addedHysteria * 10000) / maxHysteria);
+            int fearMultiplier = ((addedHysteria * BASIS_POINTS) / maxHysteria);
 
-            int ffBP = fearFactor * 10000;
+            int ffBP = fearFactor * BASIS_POINTS;
 
-            patience = (ffBP * fearMultiplier) / 10000;
+            patience = (ffBP * fearMultiplier) / BASIS_POINTS;
         }
 
         /* Set minimum patience. */
@@ -143,21 +146,8 @@ contract Fomo(
         require(tx.age >= patience);
 
         //----------------------------------------------------------------------
-        // BEGIN COMMISSIONS HANDLING
+        // BEGIN COMMISSION HANDLING
         //----------------------------------------------------------------------
-
-        /* Set Inciter (payout) bytecode. */
-        // NOTE: Supports ONLY $NEXA assets.
-        bytes23 inciterBytecode = new LockingBytecodeP2PKT(inciter);
-
-        /* Verify Inciter (payout) bytecode. */
-        require(tx.outputs[1].lockingBytecode == inciterBytecode);
-
-        /* Validate Inciter commission (dust) value. */
-        int inciterCommission = max(addedHysteria, DUST_VALUE);
-
-        /* Verify Inciter (payout) amount. */
-        require(tx.outputs[1].value >= inciterCommission);
 
         /* Set Admin bytecode. */
         // NOTE: Supports ONLY $NEXA assets.
@@ -167,7 +157,94 @@ contract Fomo(
         require(tx.outputs[2].lockingBytecode == adminBytecode);
 
         /* Calculate Admin commission. */
-        int adminCommission = (addedHysteria * ADMIN_FEE) / BASIS_POINTS;
+        int adminCommission = (addedHysteria * adminFee) / BASIS_POINTS;
+
+        /* Validate Admin commission (dust) value. */
+        // adminCommission = max(adminCommission, baseServiceFee);
+        adminCommission = max(adminCommission, DUST_VALUE);
+
+        /* Verify Admin (commission) amount. */
+        require(tx.outputs[2].value >= adminCommission);
+
+        //----------------------------------------------------------------------
+        // END COMMISSIONS HANDLING
+        //----------------------------------------------------------------------
+    }
+
+    /**
+     * Liberate
+     *
+     * Transfers the asset safely out of the Fomo Arena to the current
+     * Fearless address.
+     *
+     * NOTE: There is a 10,000 satoshi incentive/reward for ANYONE
+     *       who executes this method on behalf of the Fearless.
+     */
+    function liberate() {
+        /* Initialize dust value. */
+        int DUST_VALUE = 546;
+
+        /* Set Wisegal (incentived) fee. */
+        // NOTE: We also use this for `BASIS_POINTS`.
+        int WISEGAL_FEE = 10000;
+
+        /* Initialize Admin fee. */
+        // NOTE: This is hard-coded to save space due to Rostrum bug.
+        // NOTE: 300 is equal to 3.00%.
+        // int ADMIN_FEE = 300;
+
+        /* Set Fomo index. */
+        int fomoIdx = this.activeInputIndex;
+
+        /* Verify curfew (i.e. contract expiration) has passed. */
+        require(tx.time >= curfew);
+
+        /* Set Admin bytecode. */
+        // NOTE: Supports ONLY $NEXA assets.
+        bytes23 fearlessBytecode = new LockingBytecodeP2PKT(fearless);
+
+        /* Verify Fearless bytecode. */
+        require(tx.outputs[0].lockingBytecode == fearlessBytecode);
+
+        /* Verify the (sub-group) token output. */
+        require(tx.outputs[0]
+            .tokenSubgroupId == tx.inputs[fomoIdx]
+                .tokenSubgroupId
+        );
+
+        /* Calculate Inciter commission. */
+        // NOTE: A fee is reserved for "automated" service providers.
+        //       (see https://wisegals.org for more details)
+        int inciterPayout = tx.inputs[fomoIdx].value - WISEGAL_FEE;
+
+        /* Validate Inciter commission (dust) value. */
+        inciterPayout = max(inciterPayout, DUST_VALUE);
+
+        /* Set Inciter (payout) bytecode. */
+        // NOTE: Supports ONLY $NEXA assets.
+        bytes23 inciterBytecode = new LockingBytecodeP2PKT(inciter);
+
+        /* Verify Inciter (payout) bytecode. */
+        require(tx.outputs[1].lockingBytecode == inciterBytecode);
+
+        /* Verify Inciter (payout) amount. */
+        require(tx.outputs[1].value >= inciterPayout);
+
+
+        //----------------------------------------------------------------------
+        // BEGIN COMMISSION HANDLING
+        //----------------------------------------------------------------------
+
+        /* Set Admin bytecode. */
+        // NOTE: Supports ONLY $NEXA assets.
+        bytes23 adminBytecode = new LockingBytecodeP2PKT(admin);
+
+        /* Verify Admin (commission) bytecode. */
+        require(tx.outputs[2].lockingBytecode == adminBytecode);
+
+        /* Calculate Admin commission. */
+        // NOTE: `WISEGAL_FEE` is used to replace `BASIS_POINTS`.
+        int adminCommission = (inciterPayout * adminFee) / WISEGAL_FEE;
 
         /* Validate Admin commission (dust) value. */
         // adminCommission = max(adminCommission, baseServiceFee);
@@ -181,49 +258,9 @@ contract Fomo(
         //----------------------------------------------------------------------
 
 
-
-        /* Set Admin bytecode. */
-        // NOTE: Supports ONLY $NEXA assets.
-        // bytes23 adminBytecode = new LockingBytecodeP2PKT(admin);
-
-        /* Verify Admin (commission) bytecode. */
-        // require(tx.outputs[adminOutputIdx].lockingBytecode == adminBytecode);
-
-        /* Verify Admin (commission) amount. */
-        // require(tx.outputs[adminOutputIdx].value >= adminCommission);
-    }
-
-    /**
-     * Liberate
-     *
-     * Transfers the asset safely out of the Fomo Arena to the current
-     * Fearless address.
-     *
-     * NOTE: There is a 10,000 satoshi incentive/reward for ANYONE
-     *       who executes this method on behalf of the Fearless.
-     */
-    function liberate() {
-        /* Verify curfew (i.e. contract expiration) has passed. */
-        require(tx.time >= curfew);
-
-        /* Verify number of outputs. */
-        // NOTE: We ONLY expect the asset (plus optional change).
-        require(tx.outputs.length <= 2);
-
-        /* Set Admin bytecode. */
-        // NOTE: Supports ONLY $NEXA assets.
-        bytes23 fearlessBytecode = new LockingBytecodeP2PKT(fearless);
-
-        /* Verify Fearless bytecode. */
-        require(tx.outputs[0].lockingBytecode == fearlessBytecode);
-
-        /* Verify a (group) token output. */
-        require(tx.outputs[0].tokenGroupId != 0x);
-
-        /* Verify (optional) change output. */
-        if (tx.outputs.length == 2) {
-            /* Verify a (NEXA) coin output. */
-            require(tx.outputs[1].tokenGroupId == 0x);
-        }
+        // NOTE: There is NO requirement to verify "change" output(s), as:
+        //         1. the Fomo Asset is restricted to the 1st output.
+        //         2. the Fomo Coins are restricted to the 2nd output.
+        //            (minus the Wisegal (hard-coded) fee)
     }
 }

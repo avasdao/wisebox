@@ -5,18 +5,20 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2023 Ava's DAO
  * Released under the MIT License.
  *
- * WiseBox: The Swiss Army Knife of Smart Contracts
+ * Wisebox: The Swiss Army Knife of Smart Contracts
  *
- * WiseBox combines tiny versions of many common smart contract utilities into
+ * Wisebox combines tiny versions of many common smart contract utilities into
  * a single MAST contract. It provides convenient access to the most commonly
  * used contract utilities.
  *
- * WiseBox has been written with size-optimization and limited resources in
+ * Wisebox has been written with size-optimization and limited resources in
  * mind. It is also extremely efficient due to its use of merkentelized trees.
  * This makes it easy to simply drop-in to ANY project and GO!
  *
  * NOTES
  * --------------------
+ * Wisebox is loosely based on Toybox (formerly BusyBox) utilities.
+ *
  * The following is a preliminary list of smart contract (utility) methods:
  *   - timestamp locks
  *   - block height locks
@@ -41,20 +43,21 @@ pragma nexscript >= 0.2.0;
  * @param value
  *
  */
-contract WiseBox(
-    pubkey owner,
-    bytes32 visible key,
-    int visible unused value,
+contract Wisebox(
+    int visible unused version,
 ) {
     /**
-     * Method Name
+     * Verify
      *
-     * TBD..
+     * Verifies a "wise contract" script template as being
+     * a "certified" member of the Wisebox.
      *
-     * @param owner
-     * @param signature
+     * @param templateid
      */
-    function transfer(pubkey authorized, sig signature) {
+    function verify(bytes templateid) {
+
+        // TODO Check that template id exists in merkle tree.
+
         /* Set dust value. */
         int DUST_VALUE = 546;
 
