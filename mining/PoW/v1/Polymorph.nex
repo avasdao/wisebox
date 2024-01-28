@@ -5,21 +5,22 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * Hybrid PoW (Proof-of-Work)
+ * Polymorph PoW (Proof-of-Work)
  *
- * A hybrid proof-of-work (PoW) mining "wise" contract; designed to operate
- * in either self-running OR hosted mode.
+ * A mutable proof-of-work (PoW) mining "wise" contract; specially designed for
+ * hybrid operation in either self-running OR hosted mode, or a combination
+ * of the two.
  *
  * NOTES
  * --------------------
  * The hybrid model offers the option of CPU & GPU modes of operation. Or
- * a dual-mode which can switch back-and-forth.
+ * a alternating-mode which can switch back-and-forth.
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * Version     : 01
  * Script Hash : 0x0000000000000000000000000000000000000000
- * Namespace   : HYPOW01
+ * Namespace   : POLYPOW01
  *
  * epoch : Number of total blocks mined.
  * speed : Number of blocks mined in the last 24 hours (avg is 360 or 1/2 of Nexa).
@@ -30,15 +31,19 @@ pragma nexscript >= 0.2.0;
  * maintenance : Asset maintenance fee, set by the Administrator.
  *
  * For more information, please visit the following resources:
- *   - https://domain.tld
+ *   - https://nxy.cash
  *   - https://avasdao.org
  *
  * @param epoch
- * @param key
- * @param value
+ * @param speed
+ * @param rewards
+ * @param algo
+ * @param admin
+ * @param treasury
+ * @param maintenance
  *
  */
-contract Hybrid(
+contract Polymorph(
     int visible epoch,
     int visible speed,
     int visible rewards,

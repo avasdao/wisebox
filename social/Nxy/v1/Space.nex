@@ -1,0 +1,77 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ *
+ * Copyright (c) 2024 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Space
+ *
+ * An uncensorable, permissionless location for Creators to
+ * Build, Grow and Profit from their own *exclusive* token economies.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : SPACE01
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://nxy.app
+ *   - https://avasdao.org
+ *
+ * @param owner
+ * @param key
+ * @param value
+ *
+ */
+contract Space(
+    pubkey owner,
+    bytes32 visible key,
+    int visible unused value,
+) {
+    /**
+     * Register
+     *
+     * TBD..
+     *
+     * @param owner
+     * @param signature
+     */
+    function register(pubkey authorized, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Manage
+     *
+     * TBD..
+     *
+     * @param owner
+     * @param signature
+     */
+    function manage(pubkey authorized, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+}

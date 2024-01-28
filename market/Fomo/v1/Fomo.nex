@@ -36,7 +36,6 @@ pragma nexscript >= 0.2.0;
  */
 contract Fomo(
     bytes20 visible fearless,
-    // bytes8 visible hysteria,
     bytes20 visible inciter,
     bytes20 visible admin,
     int visible adminFee,
@@ -67,16 +66,14 @@ contract Fomo(
         /* Initialize minimum patience. */
         int MIN_PATIENCE = 1;
 
-        /* Set Fomo index. */
-        int fomoIdx = this.activeInputIndex;
-
         /* Set previous (satoshis) hysteria. */
         // int prevHysteria = tx.inputs[0].value;
         int prevHysteria = tx.inputs[fomoIdx].value * 2;
 
         /* Set new (satoshis) hysteria. */
-        // NOTE: Aggregate of previous Fearless and Inciter outputs.
-        int newHysteria = tx.outputs[1].value + tx.outputs[2].value;
+        // NOTE: Aggregate of Inciter "hysteria" value retained in Fomo and
+        //       the (previous) Fearless output.
+        int newHysteria = tx.outputs[0].value + tx.outputs[1].value;
 
         /* Validate new hysteria is greater (by at least DUST). */
         require(newHysteria > prevHysteria);
@@ -117,7 +114,7 @@ contract Fomo(
 
         /* Validate added hysteria. */
         // NOTE: Maximum hysteria is "inclusive".
-        require(within(addedHysteria, prevHysteria, maxHysteria + 1));
+        require(within(addedHysteria, prevHysteria, (maxHysteria + 1)));
 
         /* Initialize patience. */
         // NOTE: Number of `blocks` required to wait before Bid acceptance
@@ -133,8 +130,14 @@ contract Fomo(
         } else {
             int fearMultiplier = ((addedHysteria * BASIS_POINTS) / maxHysteria);
 
+            /* Validate added hysteria. */
+            // NOTE: Minimum is ~1hr, and maximum is ~1day.
+            require(within(fearFactor, 30, 720));
+
+            /* Calculate fear factor (basis points). */
             int ffBP = fearFactor * BASIS_POINTS;
 
+            /* Calculate patience. */
             patience = (ffBP * fearMultiplier) / BASIS_POINTS;
         }
 
@@ -144,6 +147,50 @@ contract Fomo(
         /* Verify minimum patience. */
         // NOTE: UTXO age MUST be AFTER the last capture time.
         require(tx.age >= patience);
+
+        /* Verify Fomo (commission) bytecode. */
+        require(tx.outputs[0].value == newHysteria);
+
+        //----------------------------------------------------------------------
+        // BEGIN LOCKING BYTECODE VERIFICATION (WORKAROUND) FOR GROUPS
+        //----------------------------------------------------------------------
+
+        /* Set Fomo index. */
+        int fomoIdx = this.activeInputIndex;
+
+        /* Parse output (script) prefix, plus 1st holder. */
+        bytes oPrefix, bytes oHolder = tx.outputs[fomoIdx]
+            .lockingBytecode
+            .split(33);
+
+        /* Parse output `tokenAmount` size, plus 2nd holder. */
+        bytes1 oSize, bytes oHolderToo = oHolder.split(1);
+
+        /* Parse output (script) suffix. */
+        // NOTE: Drop the `tokenAmount` value.
+        bytes oSuffix = oHolderToo.split(int(oSize))[1];
+
+        /* Parse input (script) prefix, plus 1st holder. */
+        bytes iPrefix, bytes iHolder = tx.inputs[fomoIdx]
+            .lockingBytecode
+            .split(33);
+
+        /* Parse input `tokenAmount` size, plus 2nd holder. */
+        bytes1 iSize, bytes iHolderToo = iHolder.split(1);
+
+        /* Parse input (script) suffix. */
+        // NOTE: Drop the `tokenAmount` value.
+        bytes iSuffix = iHolderToo.split(int(iSize))[1];
+
+        /* Validate input/output prefix scripts. */
+        require(oPrefix == iPrefix);
+
+        /* Validate input/output suffix scripts. */
+        require(oSuffix == iSuffix);
+
+        //----------------------------------------------------------------------
+        // END LOCKING BYTECODE VERIFICATION (WORKAROUND) FOR GROUPS
+        //----------------------------------------------------------------------
 
         //----------------------------------------------------------------------
         // BEGIN COMMISSION HANDLING
