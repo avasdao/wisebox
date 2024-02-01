@@ -41,7 +41,7 @@ contract Blank(
      *
      * TBD..
      *
-     * @param owner
+     * @param authorized
      * @param signature
      */
     function transfer(pubkey authorized, sig signature) {

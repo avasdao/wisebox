@@ -21,39 +21,62 @@ pragma nexscript >= 0.2.0;
  * Script Hash : 0x0000000000000000000000000000000000000000
  * Namespace   : WAITLIST01
  *
- * owner : Party whom will receive the payouts.
- * param : A very useful parameter.
+ * patron   : Party whom will receive the product(s) and/or service(s).
+ * vendor   : Party whom is offering the product(s) and/or service(s).
+ * priority : Used to "flag" a priority option (when available) for processing position or timing of delivery.
  *
  * For more information, please visit the following resources:
  *   - https://nexa.rocks/cloud
  *   - https://avasdao.org
  *
- * @param owner
- * @param key
- * @param value
+ * @param patron
+ * @param vendor
+ * @param priority
  *
  */
 contract Waitlist(
-    pubkey owner,
-    bytes32 visible key,
-    int visible unused value,
+    bytes20 visible patron,
+    bytes20 visible vendor,
+    int visible unused priority,
 ) {
     /**
-     * Add to Queue
+     * Process (Order or Request)
      *
-     * TBD..
+     * Vendors can manage assets held in the Waitlist contract, eg.
+     *   1. Withdraw all funds.
+     *   2. Refund all funds.
      *
-     * @param owner
+     * NOTE: ONLY the Waitlist (owner) can perform this action.
+     */
+    function process(pubkey authorized, sig signature) {
+        /* Set authorized sub-group id. */
+        bytes authorized = tx.inputs[1].tokenSubgroupId;
+
+        /* Verify Vendor authorization. */
+        require(hash160(authorized) == vendor);
+
+    }
+
+    /**
+     * Cancel
+     *
+     * Transfer a (pending) UTXO from the Waitlist contract to a receipient
+     * specified by the Patron.
+     *
+     * @param authorized
      * @param signature
      */
-    function addToQueue(pubkey authorized, sig signature) {
-        /* Set dust value. */
-        int DUST_VALUE = 546;
+    function cancel(pubkey authorized, sig signature) {
+        /* Calculate authorized (public key) hash. */
+        // NOTE: Must match `PUSH AsData(PUSH pubkey)` specification found at
+        //       https://spec.nexa.org/nexa/scriptTemplates.
+        bytes20 authorizedHash = hash160(
+            bytes(authorized.length) + authorized);
 
-        /* Verify parameter. */
-        require(param >= DUST_VALUE);
+        /* Validate authorized Customer. */
+        require(authorizedHash == patron);
 
-        /* Verify transaction is signed by the owner. */
-        require(checkSig(signature, owner));
+        /* Validate transaction signature. */
+        require(checkSig(signature, authorized));
     }
 }

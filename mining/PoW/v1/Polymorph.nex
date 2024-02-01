@@ -1,4 +1,4 @@
-pragma nexscript >= 0.2.0;
+pragma nexscript >= 0.7.0;
 
 /*******************************************************************************
  *
@@ -22,45 +22,74 @@ pragma nexscript >= 0.2.0;
  * Script Hash : 0x0000000000000000000000000000000000000000
  * Namespace   : POLYPOW01
  *
- * epoch : Number of total blocks mined.
- * speed : Number of blocks mined in the last 24 hours (avg is 360 or 1/2 of Nexa).
- * rewards : Amount of rewards distributed per block.
- * algo  : A (dynamic) algorithm designed to ONLY be revealed AFTER submission. (MUST use a nonce when repeating algos)
- * admin : The asset Administrator.
+ * assetid  : The Hash160 of the primary asset. (used for data analytics) [NOTE: This is the ONLY "visible" parameter.]
+ * epoch    : Number of total blocks mined.
+ * speed    : Number of blocks mined in the last 24 hours (avg is 360 or 1/2 of Nexa).
+ * rewards  : Amount of rewards distributed per block.
+ * tribute  : A fixed amount (set by the Administrator) of each block reward is sent to the Treasury.
+ * algo     : A (dynamic) algorithm designed to ONLY be revealed AFTER submission. (MUST use a nonce when repeating algos)
+ * guardian : A hash used to verify the correct nonce.
+ * admin    : The asset Administrator.
  * treasury : Destination for all fees, set by the Administrator.
- * maintenance : Asset maintenance fee, set by the Administrator.
  *
  * For more information, please visit the following resources:
  *   - https://nxy.cash
  *   - https://avasdao.org
  *
+ * @param assetid
  * @param epoch
  * @param speed
  * @param rewards
+ * @param tribute
  * @param algo
+ * @param guardian
  * @param admin
  * @param treasury
- * @param maintenance
  *
  */
 contract Polymorph(
-    int visible epoch,
-    int visible speed,
-    int visible rewards,
-    bytes20 visible algo,
-    bytes20 visible admin,
-    bytes20 visible treasury,
-    int visible maintenance,
+    bytes20 visible assetid,
+    int epoch,
+    int speed,
+    int rewards,
+    int tribute,
+    bytes20 guardian,
+    bytes20 algo,
+    bytes20 admin,
+    bytes20 treasury,
 ) {
+
+    // contract Public(
+    //     bytes20 visible unused assetid,
+    //     int epoch,
+    //     int speed,
+    //     int rewards,
+    //     int tribute,
+    //     bytes20 algo,
+    //     bytes20 guardian,
+    //     bytes20 admin,
+    //     bytes20 treasury,
+    // ) {
+    //     //
+    // }
+
     /**
      * Mint
      *
      * Mint a NEW proof-of-work token, based on the rewards schedule.
      *
+     * NOTE: `nonce` should be a random (up to 256-bit) value used
+     *       to "hide" the Hash of the paramaters of the Script.
+     *       [recommend "low" (8-byte) and intentionally brute force-able values]
+     *
      * @param solution
      * @param miner
      */
-    function mint(bytes solution, bytes20 miner) {
+    function mint(
+        bytes32 nonce,
+        bytes32 solution,
+        bytes20 miner
+    ) {
         /* Set mining rewards value. */
         // NOTE: This is hard-coded and CANNOT be changed EVER!!
         int MINING_REWARDS = 123;
@@ -71,57 +100,40 @@ contract Polymorph(
         /* Verify parameter. */
         require(param >= DUST_VALUE);
 
-        if (maintenance > 0) {
+        if (tribute > 0) {
             // TODO
         }
     }
 
+    // contract Private(
+    //     bytes20 visible unused assetid,
+    //     int unused epoch,
+    //     int unused speed,
+    //     int unused rewards,
+    //     int unused tribute,
+    //     bytes20 unused algo,
+    //     bytes20 unused guardian,
+    //     bytes20 unused admin,
+    //     bytes20 unused treasury,
+    // ) {
+    //     //
+    // }
+
     /**
-     * Set (CPU) Algorithm
+     * Manage
      *
-     * NOTE: This will be executed after EVERY (GPU) block reward,
-     *       when operating in "hybrid-hosted" mode.
+     * Guards against unauthorized access to the Minting authority
+     * of the primary asset.
      *
-     * @param algo
+     * NOTE: The Persona (or other authority) MUST be linked to the
+     *       2nd input of the contract.
      */
-    function setAlgo(bytes20 algo) {
+    function manage() {
         /* Set authorized sub-group id. */
         bytes authorized = tx.inputs[1].tokenSubgroupId;
 
+        /* Verify Admin authorization. */
         require(hash160(authorized) == admin);
     }
 
-    /**
-     * (Emergency) Override
-     *
-     * @param speed
-     * @param rewards
-     */
-    function override(
-        int speed,
-        int rewards,
-    ) {
-        /* Set authorized sub-group id. */
-        bytes authorized = tx.inputs[1].tokenSubgroupId;
-
-        require(hash160(authorized) == admin);
-    }
-
-    /**
-     * Update Management (Authority)
-     *
-     * @param admin
-     * @param treasury
-     * @param maintenance
-     */
-    function manage(
-        bytes20 admin,
-        bytes20 treasury,
-        int maintenance,
-    ) {
-        /* Set authorized sub-group id. */
-        bytes authorized = tx.inputs[1].tokenSubgroupId;
-
-        require(hash160(authorized) == admin);
-    }
 }
