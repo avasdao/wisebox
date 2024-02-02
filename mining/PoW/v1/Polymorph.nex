@@ -27,6 +27,7 @@ pragma nexscript >= 0.7.0;
  * speed    : Number of blocks mined in the last 24 hours (avg is 360 or 1/2 of Nexa).
  * rewards  : Amount of rewards distributed per block.
  * tribute  : A fixed amount (set by the Administrator) of each block reward is sent to the Treasury.
+ * handicap : Used to add additional "challenge" to the Public mining reward. (expected to a factor of GPU vs CPU)
  * algo     : A (dynamic) algorithm designed to ONLY be revealed AFTER submission. (MUST use a nonce when repeating algos)
  * guardian : A hash used to verify the correct nonce.
  * admin    : The asset Administrator.
@@ -41,6 +42,7 @@ pragma nexscript >= 0.7.0;
  * @param speed
  * @param rewards
  * @param tribute
+ * @param handicap
  * @param algo
  * @param guardian
  * @param admin
@@ -53,18 +55,19 @@ contract Polymorph(
     int speed,
     int rewards,
     int tribute,
-    bytes20 guardian,
+    int handicap,
     bytes20 algo,
+    bytes20 guardian,
     bytes20 admin,
     bytes20 treasury,
 ) {
 
-    // contract Public(
+    // contract Minter(
     //     bytes20 visible unused assetid,
     //     int epoch,
-    //     int speed,
     //     int rewards,
     //     int tribute,
+    //     int handicap,
     //     bytes20 algo,
     //     bytes20 guardian,
     //     bytes20 admin,
@@ -78,39 +81,134 @@ contract Polymorph(
      *
      * Mint a NEW proof-of-work token, based on the rewards schedule.
      *
-     * NOTE: `nonce` should be a random (up to 256-bit) value used
+     * NOTE: `password` should be a random (up to 256-bit) value used
      *       to "hide" the Hash of the paramaters of the Script.
      *       [recommend "low" (8-byte) and intentionally brute force-able values]
      *
-     * @param solution
      * @param miner
+     * @param password
+     * @param solution
      */
     function mint(
-        bytes32 nonce,
+        bytes20 miner,
+        bytes32 password,
         bytes32 solution,
-        bytes20 miner
     ) {
-        /* Set mining rewards value. */
-        // NOTE: This is hard-coded and CANNOT be changed EVER!!
-        int MINING_REWARDS = 123;
+        /**
+         * Initial Mining Rewards
+         *
+         * (measured in asset's atomic unit)
+         *
+         * Set initial mining rewards value.
+         *
+         * NOTE: This is hard-coded and CANNOT be changed EVER!!
+         */
+        int INITIAL_MINING_REWARDS = 5000000000;
 
-        /* Set dust value. */
-        int DUST_VALUE = 546;
+        /**
+         * Season Length
+         *
+         * (measured in blocks)
+         *
+         * Mining rewards will be adjusted at this interval.
+         *
+         * NOTE: Works in relation to Nexa block generation.
+         * NOTE: This is hard-coded and CANNOT be changed EVER!!
+         */
+        int SEASON_LENGTH = 64800;
 
-        /* Verify parameter. */
-        require(param >= DUST_VALUE);
+        /* Set basis points (scaling factor). */
+        int BASIS_POINTS = 10000;
 
+        //----------------------------------------------------------------------
+        // BEGIN CONTRACT SECURITY & PRESERVATION VERIFICATION
+        //----------------------------------------------------------------------
+
+        /* Verify UTXO age is AT LEAST ONE BLOCK. */
+        // NOTE: Allows for mining (hash) attack mitigation (if required).
+        require(tx.age >= 1);
+
+        /* Verify the contract Script remains unchanged. */
+        // NOTE: Parameter updates are "managed" by the Manager.
+        //       (see the Manager contract below)
+        require(
+            tx.outputs[this.activeInputIndex]
+                .lockingBytecode == tx.inputs[this.activeInputIndex]
+                    .lockingBytecode
+        );
+
+        //----------------------------------------------------------------------
+        // END CONTRACT SECURITY & PRESERVATION VERIFICATION
+        //----------------------------------------------------------------------
+
+        //----------------------------------------------------------------------
+        // BEGIN MINING CHALLENGE VERIFICATION
+        //----------------------------------------------------------------------
+
+        /* Set entropy from the previous transaction hash. */
+        bytes32 entropy = tx.inputs[this.activeInputIndex]
+            .outpointTransactionHash;
+
+
+        require(entropy[0] == 0x);
+
+        //----------------------------------------------------------------------
+        // END MINING CHALLENGE VERIFICATION
+        //----------------------------------------------------------------------
+
+        //----------------------------------------------------------------------
+        // BEGIN MINING REWARD VERIFICATION
+        //----------------------------------------------------------------------
+
+        /* Calculate current season. */
+        int currentSeason = (epoch / SEASON_LENGTH) + 1;
+
+        /* Calculate Mining reward. */
+        int miningReward = (INITIAL_MINING_REWARDS / currentSeason);
+
+        /* Verify Mining (token) reward *exact* amount. */
+        // NOTE: Verification is NOT for a single output, but for
+        //       the TOTAL output amount of the FULL transaction.
+        //       (especially convenient for mining pool payouts)
+        // NOTE: Treasury Tribute is validated elsewhere.
+        require(
+            tx.groupAmountOut(
+                tx.inputs[this.activeInputIndex]
+                    .tokenGroupId) == miningReward
+        );
+
+        //----------------------------------------------------------------------
+        // END MINING REWARD VERIFICATION
+        //----------------------------------------------------------------------
+
+        //----------------------------------------------------------------------
+        // BEGIN TREASURY TRIBUTE VERIFICATION
+        //----------------------------------------------------------------------
+
+        int tributeValue = 0;
+
+        /* Verify a Treasury Tribute. */
+        // NOTE: If required, MUST be the 3rd output of the transaction.
         if (tribute > 0) {
-            // TODO
+            /* Calculate Treasury Tribute amount. */
+            int tributeAmount = (miningReward * tribute) / BASIS_POINTS;
+
+            /* Verfify Treasury Tribute amount. */
+            require(tx.outputs[2].tokenAmount >= tributeAmount);
         }
+
+        //----------------------------------------------------------------------
+        // END TREASURY TRIBUTE VERIFICATION
+        //----------------------------------------------------------------------
     }
 
-    // contract Private(
+    // contract Manager(
     //     bytes20 visible unused assetid,
     //     int unused epoch,
     //     int unused speed,
     //     int unused rewards,
     //     int unused tribute,
+    //     int unused handicap,
     //     bytes20 unused algo,
     //     bytes20 unused guardian,
     //     bytes20 unused admin,
@@ -126,7 +224,7 @@ contract Polymorph(
      * of the primary asset.
      *
      * NOTE: The Persona (or other authority) MUST be linked to the
-     *       2nd input of the contract.
+     *       2nd input of the transaction.
      */
     function manage() {
         /* Set authorized sub-group id. */
