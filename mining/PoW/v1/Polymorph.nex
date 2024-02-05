@@ -1,4 +1,4 @@
-pragma nexscript >= 0.7.0;
+pragma nexscript >= 0.2.0;
 
 /*******************************************************************************
  *
@@ -81,21 +81,22 @@ contract Polymorph(
      *
      * Mint a NEW proof-of-work token, based on the rewards schedule.
      *
-     * NOTE: `password` should be a random (up to 256-bit) value used
-     *       to "hide" the Hash of the paramaters of the Script.
-     *       [recommend "low" (8-byte) and intentionally brute force-able values]
+     * An (optional) access code can be used to offer additional protections
+     * against malicious use and/or abuse of the Script template.
+     *
+     * NOTE: `access` (code) should be a random (up to 160-bit) value.
      *
      * NOTE: `miner` allows mining pools to operate w/out the concern
      *       that miners will be selfish with their solution candidates.
      *
+     * @param access
      * @param miner
      * @param candidate
-     * @param password
      */
     function mint(
-        bytes32 password,
-        bytes32 candidate,
+        bytes20 access,
         bytes20 miner,
+        bytes32 candidate,
     ) {
         /**
          * Initial Mining Rewards
@@ -165,10 +166,10 @@ contract Polymorph(
         // BEGIN MINING CHALLENGE VERIFICATION
         //----------------------------------------------------------------------
 
-        /* Verify Guardian password. */
-        // NOTE: See the Docs for more information about the Guardian.
-        require(hash160(password) == guardian);
-
+        /* Verify Guardian access code. */
+        // NOTE: See the Wisebox Docs for more information about
+        //       the use of Guardians.
+        require(hash160(access) == guardian);
 
         /* Set entropy from the previous transaction hash. */
         bytes entropy = tx.inputs[this.activeInputIndex]
@@ -195,6 +196,9 @@ contract Polymorph(
          *   ✔ SHA-256(RIPEMD-160)
          *   ✔ SHA-256(SHA-256)
          *
+         * NOTE: Do to the current Op code limit and Script size,
+         *       there is a maximum of ten (10) random hashes allowed.
+         *
          * !! IMPORTANT COMPILER NOTE !!
          * In order to enable the Polymorph Hashing Engine, contract
          * architect(s) are REQUIRED to *manually* adjust the NexScript
@@ -206,11 +210,15 @@ contract Polymorph(
          * inserted by the NexScript (nexc) compiler.
          */
         bytes solution = (
-            hash256(
-                hash160(
-                    sha256(
-                        ripemd160(
-                            sha1(miner + entropy + candidate)
+            hash256( // duplicated
+                ripemd160( // duplicated
+                    hash256(
+                        hash160(
+                            sha256(
+                                ripemd160(
+                                    sha1(miner + entropy + candidate)
+                                )
+                            )
                         )
                     )
                 )
