@@ -13,69 +13,21 @@ pragma nexscript >= 0.2.0;
  *
  * NOTES
  * --------------------
- * The hybrid model offers the option of CPU & GPU modes of operation. Or
- * a alternating-mode which can switch back-and-forth.
+ * The hybrid model offers the option of CPU & GPU modes of operation.
+ * Or an alternating-mode which can switch back-and-forth.
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * Version     : 01
- * Script Hash : 0x0000000000000000000000000000000000000000
+ * Script Hash : 0x90D3B53F09E8430BD4D519243071090D6CB60F96
  * Namespace   : POLYPOW01
  *
- * algo       : A (dynamic) algorithm designed to ONLY be revealed AFTER submission. (MUST use a nonce when repeating algos)
- * assetid    : The Hash160 of the primary asset. (used for data analytics) [NOTE: This is the ONLY "visible" parameter.]
- * epoch      : Number of total blocks mined.
- * difficulty : Number of leading zeroes required to pass hashing challenge.
- * tribute    : A fixed amount (set by the Administrator) of each block reward is sent to the Treasury.
- * handicap   : Used to add additional "challenge" to the Public mining reward. (expected to a factor of GPU vs CPU)
- * guardian   : A hash used to verify the correct nonce.
- * admin      : The asset Administrator.
- * treasury   : Destination for all fees, set by the Administrator.
- * isPublic   : A "miner-set" flag used to designate the current mining status and enable/disable the Handicap.
- *
  * For more information, please visit the following resources:
- *   - https://nxy.cash
+ *   - https://nxy.cash/whitepaper
  *   - https://avasdao.org
  *
- * @param algo
- * @param assetid
- * @param epoch
- * @param difficulty
- * @param tribute
- * @param handicap
- * @param guardian
- * @param admin
- * @param treasury
- * @param isPublic
- *
  */
-contract Polymorph(
-    bytes20 visible unused algo, // NOTE: Used in "hack" to `OP_ROLL` dynamic (contract) hash verification.
-    bytes20 visible assetid,
-    int epoch,
-    int difficulty,
-    int tribute,
-    int handicap,
-    bytes20 guardian,
-    bytes20 admin,
-    bytes20 treasury,
-    bool isPublic,
-) {
-
-    // contract Minter(
-    //     bytes20 unused algo,
-    //     bytes20 visible unused assetid,
-    //     int epoch,
-    //     int tribute,
-    //     int handicap,
-    //     bytes20 guardian,
-    //     bytes20 admin,
-    //     bytes20 treasury,
-    //     bool isPublic,
-    // ) {
-    //     //
-    // }
-
+contract Polymorph() {
     /**
      * Mint
      *
@@ -89,12 +41,31 @@ contract Polymorph(
      * NOTE: `miner` allows mining pools to operate w/out the concern
      *       that miners will be selfish with their solution candidates.
      *
-     * @param access
+     * @param isPublic   A "miner-set" flag used to designate the current mining status and enable/disable the Handicap.
+     * @param epoch      Number of total blocks mined.
+
+     * @param assetid    The Hash160 of the primary asset. (used for data analytics) [NOTE: This is the ONLY "visible" parameter.]
+     * @param access     A miner-submitted access code. (Used to prevent abuse)
+     * @param guardian   A hash used to verify the correct nonce.
+     * @param difficulty Number of leading zeroes required to pass hashing challenge.
+     * @param handicap   Used to add additional "challenge" to the Public mining reward. (expected to a factor of GPU vs CPU)
+     *
      * @param miner
      * @param candidate
      */
     function mint(
+        /* (Mutable) Constraints */
+        bool isPublic,
+        int epoch,
+
+        /* (Immutable) Constraints */
+        bytes20 assetid,
         bytes20 access,
+        bytes20 guardian,
+        int difficulty,
+        int handicap,
+
+        /* (Miner) Parameters */
         bytes20 miner,
         bytes32 candidate,
     ) {
@@ -126,7 +97,7 @@ contract Polymorph(
         int SEASON_LENGTH = 64800;
 
         /* Set basis points (scaling factor). */
-        int BASIS_POINTS = 10000;
+        // int BASIS_POINTS = 10000;
 
         //----------------------------------------------------------------------
         // BEGIN CONTRACT SECURITY & PRESERVATION VERIFICATION
@@ -136,24 +107,33 @@ contract Polymorph(
         // NOTE: Allows for mining (hash) attack mitigation (if required).
         require(tx.age >= 1);
 
-        /* Verify (registered) asset id. */
-        require(hash160(tx.outputs[this.activeInputIndex]
-                .tokenGroupId) == assetid);
+        /* Set token group id. */
+        bytes32 tokenGroupId = bytes32(
+            tx.outputs[this.activeInputIndex].tokenGroupId);
 
-        /* Set locking bytes length. */
-        int lockLen = tx.inputs[this.activeInputIndex]
-            .lockingBytecode.length;
+        /* Verify (registered) asset id. */
+        require(hash160(tokenGroupId) == assetid);
+
+        /* Increment epoch (by one). */
+        epoch = (epoch + 1);
+
+        /* Convert to bytes. */
+        bytes epochBytes = bytes(epoch);
+
+        /* Set to PUSH script. */
+        bytes epochPush = (bytes(epochBytes.length) + epochBytes);
 
         /* Build "public" locking bytes. */
         // NOTE: `OP_TRUE` or `OP_1` is encoded as `0x51`.
-        bytes publicLock = tx.inputs[this.activeInputIndex]
-            .lockingBytecode.split(lockLen - 1)[0] + 0x51;
+        bytes publicLock = 0x51 + epochPush + tx.inputs[this.activeInputIndex]
+            .lockingBytecode.split(epochPush.length + 1)[1];
 
         /* Verify contract lock remains unchanged (except `public` flag). */
         // NOTE: Parameter updates are "managed" by the Manager.
         //       (see the Manager contract below)
-        require(tx.outputs[this.activeInputIndex]
-                .lockingBytecode == publicLock);
+        require(
+            tx.outputs[this.activeInputIndex].lockingBytecode == publicLock
+        );
 
         // NOTE: Token (mint authority) value is preserved
         //       in the locking script.
@@ -199,29 +179,22 @@ contract Polymorph(
          * NOTE: Do to the current Op code limit and Script size,
          *       there is a maximum of ten (10) random hashes allowed.
          *
-         * !! IMPORTANT COMPILER NOTE !!
-         * In order to enable the Polymorph Hashing Engine, contract
-         * architect(s) are REQUIRED to *manually* adjust the NexScript
-         * compiler automatically-generated Script (Op codes).
-         *
-         * They MUST utilize the `bytes20 unused algo` (placeholder) by
-         * inserting an `OP_ROLL` into the Script, for the purpose of
-         * *dynamically* replacing the hard-coded "contract verification hash"
-         * inserted by the NexScript (nexc) compiler.
+         * NOTE: RIPEMD-160 will always used as the final hash.
+         *       (to maintain difficulty calculations??)
          */
         bytes solution = (
-            hash256( // duplicated
-                ripemd160( // duplicated
-                    hash256(
-                        hash160(
-                            sha256(
-                                ripemd160(
+            hash160(
+                // ripemd160( // NOTE: duplicated
+                    // hash256(
+                        // hash160(
+                            // sha256(
+                                // ripemd160(
                                     sha1(miner + entropy + candidate)
-                                )
-                            )
-                        )
-                    )
-                )
+                                // )
+                            // )
+                        // )
+                    // )
+                // )
             )
         );
 
@@ -229,16 +202,17 @@ contract Polymorph(
         if (isPublic) {
             /* Re-calculate difficulty for desktop/GPU miners. */
             // NOTE: A 256-bit solution has a maximum of (32) bytes.
-            difficulty = min((difficulty * handicap), 32);
+            difficulty = max((difficulty / handicap), int(0xFF));
         }
 
         /* Generate a submission that meets the difficulty requirement. */
-        // NOTE: Each `difficulty` represents one (1) byte OR two (2) zeroes,
-        //       as we CANNOT cast <bytes> to <string>.
-        bytes submission = solution.split(difficulty)[0];
+        // NOTE: Take the 1st 8 bytes (64-bits) and use the built-in
+        //       arithmetic functions.
+        int submission = int(solution.split(8)[0]);
 
         /* Verify the FINAL submission. */
-        require(submission == 0x);
+        // require(submission == 0x);
+        require(submission <= difficulty);
 
         //----------------------------------------------------------------------
         // END MINING CHALLENGE VERIFICATION
@@ -249,10 +223,14 @@ contract Polymorph(
         //----------------------------------------------------------------------
 
         /* Calculate current season. */
-        int currentSeason = (epoch / SEASON_LENGTH) + 1;
+        int currentSeason = ((epoch / SEASON_LENGTH) + 1);
 
         /* Calculate Mining reward. */
         int miningReward = (INITIAL_MINING_REWARDS / currentSeason);
+
+        /* Set authority output amount. */
+        int authOutputAmount = tx.inputs[this.activeInputIndex]
+            .tokenAmount;
 
         /* Verify Mining (token) reward *exact* amount. */
         // NOTE: Verification is NOT for a single output, but for
@@ -260,9 +238,7 @@ contract Polymorph(
         //       (especially convenient for mining pool payouts)
         // NOTE: Treasury Tribute is validated elsewhere.
         require(
-            tx.groupAmountOut(bytes32(
-                tx.inputs[this.activeInputIndex]
-                    .tokenGroupId)) == miningReward
+            tx.groupAmountOut(tokenGroupId) == (miningReward + authOutputAmount)
         );
 
         //----------------------------------------------------------------------
@@ -273,42 +249,28 @@ contract Polymorph(
         // BEGIN TREASURY TRIBUTE VERIFICATION
         //----------------------------------------------------------------------
 
-        /* Verify a Treasury Tribute. */
+        /* Set Treasury. */
+        bytes20 TREASURY = 0x0000000000000000000000000000000000000000;
+
+        /* Set locking (bytecode) length. */
         // NOTE: If required, MUST be the 2nd output of the transaction.
-        if (tribute > 0) {
-            /* Calculate Treasury Tribute amount. */
-            int tributeAmount = (miningReward * tribute) / BASIS_POINTS;
+        int lockLen = tx.outputs[1].lockingBytecode.length;
 
-            /* Verfify Treasury Tribute amount. */
-            require(tx.outputs[1].tokenAmount >= tributeAmount);
+        /* Verify Treasury (bytecode). */
+        require(tx.outputs[1].lockingBytecode
+            .split(lockLen - 20)[1] == TREASURY);
 
-            /* Set locking (bytecode) length. */
-            lockLen = tx.outputs[1].lockingBytecode.length;
+        /* Calculate Treasury Tribute amount. */
+        // int tributeAmount = (miningReward * tribute) / BASIS_POINTS;
+        int tributeAmount = 400000000; // 8.00%
 
-            /* Verify Treasury (bytecode). */
-            require(tx.outputs[1].lockingBytecode
-                .split(lockLen - 20)[1] == treasury);
-        }
+        /* Verfify Treasury Tribute amount. */
+        require(tx.outputs[1].tokenAmount >= tributeAmount);
 
         //----------------------------------------------------------------------
         // END TREASURY TRIBUTE VERIFICATION
         //----------------------------------------------------------------------
     }
-
-    // contract Manager(
-    //     bytes20 unused algo,
-    //     bytes20 visible unused assetid,
-    //     int unused epoch,
-    //     int unused difficulty,
-    //     int unused tribute,
-    //     int unused handicap,
-    //     bytes20 unused guardian,
-    //     bytes20 unused admin,
-    //     bytes20 unused treasury,
-    //     bool unused isPublic,
-    // ) {
-    //     //
-    // }
 
     /**
      * Manage
@@ -320,11 +282,15 @@ contract Polymorph(
      *       2nd input of the transaction.
      */
     function manage() {
+        /* Set Administrator. */
+        // NOTE: MUST be hard-coded for each instance of this template.
+        bytes20 ADMIN = 0x0000000000000000000000000000000000000000;
+
         /* Set authorized sub-group id. */
         bytes authorized = tx.inputs[1].tokenSubgroupId;
 
         /* Verify Admin authorization. */
-        require(hash160(authorized) == admin);
+        require(hash160(authorized) == ADMIN);
     }
 
 }
