@@ -103,13 +103,9 @@ contract Polymorph() {
         // BEGIN CONTRACT SECURITY & PRESERVATION VERIFICATION
         //----------------------------------------------------------------------
 
-        /* Verify UTXO age is AT LEAST ONE BLOCK. */
-        // NOTE: Allows for mining (hash) attack mitigation (if required).
-        require(tx.age >= 1);
-
         /* Set token group id. */
         bytes32 tokenGroupId = bytes32(
-            tx.outputs[this.activeInputIndex].tokenGroupId);
+            tx.inputs[this.activeInputIndex].tokenGroupId);
 
         /* Verify (registered) asset id. */
         require(hash160(tokenGroupId) == assetid);
@@ -123,10 +119,17 @@ contract Polymorph() {
         /* Set to PUSH script. */
         bytes epochPush = (bytes(epochBytes.length) + epochBytes);
 
+        /* Parse the token id and amount (42 bytes). */
+        bytes iTokenBytes, bytes iHolder = tx.inputs[this.activeInputIndex]
+            .lockingBytecode
+            .split(42);
+
         /* Build "public" locking bytes. */
         // NOTE: `OP_TRUE` or `OP_1` is encoded as `0x51`.
-        bytes publicLock = 0x51 + epochPush + tx.inputs[this.activeInputIndex]
-            .lockingBytecode.split(epochPush.length + 1)[1];
+// FIXME: MUST account for epoch byte-length changes (i.e. 2->4->8)!!
+//        (maybe this can be handled by the Admin @ epochs 0xFF and 0xFFFF ??)
+        bytes publicLock = iTokenBytes + 0x51 + epochPush + iHolder
+            .split(epochPush.length + 1)[1];
 
         /* Verify contract lock remains unchanged (except `public` flag). */
         // NOTE: Parameter updates are "managed" by the Manager.
@@ -180,7 +183,7 @@ contract Polymorph() {
          *       there is a maximum of ten (10) random hashes allowed.
          *
          * NOTE: RIPEMD-160 will always used as the final hash.
-         *       (to maintain difficulty calculations??)
+         *       (to maintain stable & consistent difficulty calculations??)
          */
         bytes solution = (
             hash160(
@@ -198,8 +201,13 @@ contract Polymorph() {
             )
         );
 
-        /* Verify public difficulty. */
+        /* Verify public rewards round. */
         if (isPublic) {
+            /* Verify UTXO age is AT LEAST ONE BLOCK. */
+            // NOTE: Prevents a denial-of-service (DoS) hash attack by FPGAs or ASICs.
+            // NOTE: Private rewards are availalbe IMMEDIATELY after an Admin round reset.
+            require(tx.age >= 1);
+
             /* Re-calculate difficulty for desktop/GPU miners. */
             // NOTE: A 256-bit solution has a maximum of (32) bytes.
             difficulty = max((difficulty / handicap), int(0xFF));
@@ -250,7 +258,8 @@ contract Polymorph() {
         //----------------------------------------------------------------------
 
         /* Set Treasury. */
-        bytes20 TREASURY = 0x0000000000000000000000000000000000000000;
+        bytes20 TREASURY = 0x80631ec9fe69de771ccc67adce8dd81b22252590;
+        // nexa:nqtsq5g5sp33aj07d808w8xvv7kuarwcrv3z2fvskw2ej7dj
 
         /* Set locking (bytecode) length. */
         // NOTE: If required, MUST be the 2nd output of the transaction.
