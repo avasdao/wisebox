@@ -1,0 +1,79 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ *
+ * Copyright (c) 2024 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Time To Pay
+ *
+ * Allows a maximum time for a payment to be collected before it is
+ * allowed to be returned to the Sender by anyone.
+ *
+ * Automation of this service is managed by Wisegal: XXX.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : TIMETOPAY01
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://nexa.rocks/order
+ *   - https://avasdao.org
+ *
+ * @param owner
+ * @param key
+ * @param value
+ *
+ */
+contract TimeToPay(
+    pubkey owner,
+    bytes32 visible key,
+    int visible unused value,
+) {
+    /**
+     * Collect Payment
+     *
+     * TBD..
+     *
+     * @param authorized
+     * @param signature
+     */
+    function collect(pubkey authorized, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Refund Payment
+     *
+     * TBD..
+     *
+     * @param authorized
+     * @param signature
+     */
+    function refund(pubkey authorized, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+}
