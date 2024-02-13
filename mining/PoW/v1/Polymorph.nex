@@ -19,7 +19,7 @@ pragma nexscript >= 0.2.0;
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * Version     : 01
- * Script Hash : 0x758C4F5CE92BC90543914C385D5298A93E698190
+ * Script Hash : 0x90D3B53F09E8430BD4D519243071090D6CB60F96
  * Namespace   : POLYPOW01
  *
  * For more information, please visit the following resources:
@@ -268,8 +268,8 @@ contract Polymorph() {
         //----------------------------------------------------------------------
 
         /* Set Treasury. */
-        bytes20 TREASURY = 0x80631ec9fe69de771ccc67adce8dd81b22252590;
-        // nexa:nqtsq5g5sp33aj07d808w8xvv7kuarwcrv3z2fvskw2ej7dj
+        // NOTE: MUST be hard-coded for each instance of this template.
+        bytes20 TREASURY = 0x0000000000000000000000000000000000000000;
 
         /* Set locking (bytecode) length. */
         // NOTE: If required, MUST be the 2nd output of the transaction.
