@@ -24,6 +24,7 @@ pragma nexscript >= 0.2.0;
  * patron   : Party whom will receive the product(s) and/or service(s).
  * vendor   : Party whom is offering the product(s) and/or service(s).
  * priority : Used to "flag" a priority option (when available) for processing position or timing of delivery.
+ * memo     : Any additional information (required by the vendor) to process the request.
  *
  * For more information, please visit the following resources:
  *   - https://nexa.rocks/cloud
@@ -32,12 +33,14 @@ pragma nexscript >= 0.2.0;
  * @param patron
  * @param vendor
  * @param priority
+ * @param memo
  *
  */
 contract Waitlist(
     bytes20 visible patron,
     bytes20 visible vendor,
     int visible unused priority,
+    bytes visible unused memo,
 ) {
     /**
      * Process (Order or Request)

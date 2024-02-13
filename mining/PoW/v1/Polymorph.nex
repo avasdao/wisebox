@@ -19,7 +19,7 @@ pragma nexscript >= 0.2.0;
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * Version     : 01
- * Script Hash : 0x90D3B53F09E8430BD4D519243071090D6CB60F96
+ * Script Hash : 0x758C4F5CE92BC90543914C385D5298A93E698190
  * Namespace   : POLYPOW01
  *
  * For more information, please visit the following resources:
@@ -201,6 +201,11 @@ contract Polymorph() {
             )
         );
 
+        /* Generate a submission that meets the difficulty requirement. */
+        // NOTE: Take the 1st 8 bytes (64-bits) and use the built-in
+        //       arithmetic functions.
+        int submission = int(solution.split(8)[0]);
+
         /* Verify public rewards round. */
         if (isPublic) {
             /* Verify UTXO age is AT LEAST ONE BLOCK. */
@@ -208,19 +213,24 @@ contract Polymorph() {
             // NOTE: Private rewards are availalbe IMMEDIATELY after an Admin round reset.
             require(tx.age >= 1);
 
-            /* Re-calculate difficulty for desktop/GPU miners. */
-            // NOTE: A 256-bit solution has a maximum of (32) bytes.
-            difficulty = max((difficulty / handicap), int(0xFF));
+            /**
+             * Public Difficulty
+             *
+             * Re-calculate the difficulty for desktop/GPU miners.
+             *
+             * NOTE: A 256-bit solution has a maximum of (32) bytes.
+             *
+             * NOTE: There is a (hard-coded) maximum difficulty of
+             *       0xFF (i.e. 18 zeros).
+             */
+            int publicDifficulty = max((difficulty / handicap), int(0xFF));
+
+            /* Verify the FINAL submission. */
+            require(submission <= publicDifficulty);
+        } else {
+            /* Verify the FINAL submission. */
+            require(submission <= difficulty);
         }
-
-        /* Generate a submission that meets the difficulty requirement. */
-        // NOTE: Take the 1st 8 bytes (64-bits) and use the built-in
-        //       arithmetic functions.
-        int submission = int(solution.split(8)[0]);
-
-        /* Verify the FINAL submission. */
-        // require(submission == 0x);
-        require(submission <= difficulty);
 
         //----------------------------------------------------------------------
         // END MINING CHALLENGE VERIFICATION
