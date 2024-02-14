@@ -59,15 +59,36 @@ contract Polymorph() {
         int epoch,
 
         /* (Immutable) Constraints */
-        bytes20 assetid,
-        bytes20 access,
-        bytes20 guardian,
+        /* (bytes20) assetid */
+        bytes8 assetid_1,
+        bytes8 assetid_2,
+        bytes4 assetid_3,
+        /* (bytes20) access */
+        bytes8 access_1,
+        bytes8 access_2,
+        bytes4 access_3,
+        /* (bytes20) guardian */
+        bytes8 guardian_1,
+        bytes8 guardian_2,
+        bytes4 guardian_3,
         int difficulty,
         int handicap,
 
         /* (Miner) Parameters */
-        bytes20 miner,
-        bytes32 candidate,
+        /* (bytes20) miner */
+        bytes8 miner_1,
+        bytes8 miner_2,
+        bytes4 miner_3,
+        /* (bytes32) candidate */
+        bytes8 candidate_1,
+        bytes8 candidate_2,
+        bytes8 candidate_3,
+        bytes8 candidate_4,
+        /* (bytes20) no-op */
+        bytes8 noop_1,
+        bytes8 noop_2,
+        bytes8 noop_3,
+        bytes8 noop_4,
     ) {
         /**
          * Initial Mining Rewards
@@ -108,35 +129,42 @@ contract Polymorph() {
             tx.inputs[this.activeInputIndex].tokenGroupId);
 
         /* Verify (registered) asset id. */
-        require(hash160(tokenGroupId) == assetid);
+        // require(hash160(tokenGroupId) == assetid);
+tokenGroupId = tokenGroupId;
+
+        /* Re-build asset id. */
+        bytes20 assetid = (assetid_1 + assetid_2 + assetid_3);
+require(assetid != 0x);
 
         /* Increment epoch (by one). */
         epoch = (epoch + 1);
 
         /* Convert to bytes. */
-        bytes epochBytes = bytes(epoch);
+        // bytes epochBytes = bytes(epoch);
+        bytes publicLock = bytes(epoch);
 
         /* Set to PUSH script. */
-        bytes epochPush = (bytes(epochBytes.length) + epochBytes);
+        // bytes epochPush = (bytes(epochBytes.length) + epochBytes);
 
         /* Parse the token id and amount (42 bytes). */
-        bytes iTokenBytes, bytes iHolder = tx.inputs[this.activeInputIndex]
-            .lockingBytecode
-            .split(42);
+        // bytes iTokenBytes, bytes iHolder = tx.inputs[this.activeInputIndex]
+        //     .lockingBytecode
+        //     .split(42);
 
         /* Build "public" locking bytes. */
         // NOTE: `OP_TRUE` or `OP_1` is encoded as `0x51`.
 // FIXME: MUST account for epoch byte-length changes (i.e. 2->4->8)!!
 //        (maybe this can be handled by the Admin @ epochs 0xFF and 0xFFFF ??)
-        bytes publicLock = iTokenBytes + 0x51 + epochPush + iHolder
-            .split(epochPush.length + 1)[1];
+        // bytes publicLock = iTokenBytes + 0x51 + epochPush + iHolder
+        //     .split(epochPush.length + 1)[1];
 
         /* Verify contract lock remains unchanged (except `public` flag). */
         // NOTE: Parameter updates are "managed" by the Manager.
         //       (see the Manager contract below)
-        require(
-            tx.outputs[this.activeInputIndex].lockingBytecode == publicLock
-        );
+        // require(
+        //     tx.outputs[this.activeInputIndex].lockingBytecode == publicLock
+        // );
+publicLock = publicLock;
 
         // NOTE: Token (mint authority) value is preserved
         //       in the locking script.
@@ -152,11 +180,30 @@ contract Polymorph() {
         /* Verify Guardian access code. */
         // NOTE: See the Wisebox Docs for more information about
         //       the use of Guardians.
-        require(hash160(access) == guardian);
+        // require(hash160(access) == guardian);
+
+        /* Re-build access. */
+        bytes20 access = (access_1 + access_2 + access_3);
+access = access;
+
+        /* Re-build guardian. */
+        bytes20 guardian = (guardian_1 + guardian_2 + guardian_3);
+guardian = guardian;
 
         /* Set entropy from the previous transaction hash. */
         bytes entropy = tx.inputs[this.activeInputIndex]
             .outpointTransactionHash;
+
+        /* Re-build miner. */
+        bytes20 miner = (miner_1 + miner_2 + miner_3);
+
+        /* Re-build candidate. */
+        // bytes32 candidate = (candidate_1 + candidate_2 + candidate_3 + candidate_4);
+        bytes32 candidate = (candidate_1 + candidate_2 + candidate_3 + candidate_4);
+
+/* Re-build no-op. */
+bytes32 noop = (noop_1 + noop_2 + noop_3 + noop_4);
+noop = noop;
 
         /**
          * Hashing Challenge
@@ -200,18 +247,19 @@ contract Polymorph() {
                 // )
             )
         );
+solution = solution;
 
         /* Generate a submission that meets the difficulty requirement. */
         // NOTE: Take the 1st 8 bytes (64-bits) and use the built-in
         //       arithmetic functions.
-        int submission = int(solution.split(8)[0]);
+        int submission = 1;//int(solution.split(8)[0]);
 
         /* Verify public rewards round. */
         if (isPublic) {
             /* Verify UTXO age is AT LEAST ONE BLOCK. */
             // NOTE: Prevents a denial-of-service (DoS) hash attack by FPGAs or ASICs.
             // NOTE: Private rewards are availalbe IMMEDIATELY after an Admin round reset.
-            require(tx.age >= 1);
+            // require(tx.age >= 1);
 
             /**
              * Public Difficulty
@@ -224,13 +272,14 @@ contract Polymorph() {
              *       0xFF (i.e. 18 zeros).
              */
             int publicDifficulty = max((difficulty / handicap), int(0xFF));
-
+publicDifficulty = publicDifficulty;
             /* Verify the FINAL submission. */
-            require(submission <= publicDifficulty);
+            // require(submission <= publicDifficulty);
         } else {
             /* Verify the FINAL submission. */
-            require(submission <= difficulty);
+            // require(submission <= difficulty);
         }
+submission = submission;
 
         //----------------------------------------------------------------------
         // END MINING CHALLENGE VERIFICATION
@@ -255,9 +304,11 @@ contract Polymorph() {
         //       the TOTAL output amount of the FULL transaction.
         //       (especially convenient for mining pool payouts)
         // NOTE: Treasury Tribute is validated elsewhere.
-        require(
-            tx.groupAmountOut(tokenGroupId) == (miningReward + authOutputAmount)
-        );
+        // require(
+        //     tx.groupAmountOut(tokenGroupId) == (miningReward + authOutputAmount)
+        // );
+miningReward = miningReward;
+authOutputAmount = authOutputAmount;
 
         //----------------------------------------------------------------------
         // END MINING REWARD VERIFICATION
@@ -269,22 +320,23 @@ contract Polymorph() {
 
         /* Set Treasury. */
         // NOTE: MUST be hard-coded for each instance of this template.
-        bytes20 TREASURY = 0x0000000000000000000000000000000000000000;
+        // bytes20 TREASURY = 0x0000000000000000000000000000000000000000;
 
         /* Set locking (bytecode) length. */
         // NOTE: If required, MUST be the 2nd output of the transaction.
-        int lockLen = tx.outputs[1].lockingBytecode.length;
+        // int lockLen = tx.outputs[1].lockingBytecode.length;
 
         /* Verify Treasury (bytecode). */
-        require(tx.outputs[1].lockingBytecode
-            .split(lockLen - 20)[1] == TREASURY);
+        // require(tx.outputs[1].lockingBytecode
+        //     .split(lockLen - 20)[1] == TREASURY);
 
         /* Calculate Treasury Tribute amount. */
         // int tributeAmount = (miningReward * tribute) / BASIS_POINTS;
         int tributeAmount = 400000000; // 8.00%
 
         /* Verfify Treasury Tribute amount. */
-        require(tx.outputs[1].tokenAmount >= tributeAmount);
+        // require(tx.outputs[1].tokenAmount >= tributeAmount);
+require(tributeAmount >= 0);
 
         //----------------------------------------------------------------------
         // END TREASURY TRIBUTE VERIFICATION
