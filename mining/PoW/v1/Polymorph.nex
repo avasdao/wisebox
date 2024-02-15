@@ -33,62 +33,22 @@ contract Polymorph() {
      *
      * Mint a NEW proof-of-work token, based on the rewards schedule.
      *
-     * An (optional) access code can be used to offer additional protections
+     * An (optional) access key can be used to offer additional protections
      * against malicious use and/or abuse of the Script template.
      *
-     * NOTE: `access` (code) should be a random (up to 160-bit) value.
+     * NOTE: `access` (key) should be a random (up to 160-bit) value.
      *
      * NOTE: `miner` allows mining pools to operate w/out the concern
      *       that miners will be selfish with their solution candidates.
      *
-     * @param isPublic   A "miner-set" flag used to designate the current mining status and enable/disable the Handicap.
-     * @param epoch      Number of total blocks mined.
-
-     * @param assetid    The Hash160 of the primary asset. (used for data analytics) [NOTE: This is the ONLY "visible" parameter.]
-     * @param access     A miner-submitted access code. (Used to prevent abuse)
-     * @param guardian   A hash used to verify the correct nonce.
-     * @param difficulty Number of leading zeroes required to pass hashing challenge.
-     * @param handicap   Used to add additional "challenge" to the Public mining reward. (expected to a factor of GPU vs CPU)
-     *
-     * @param miner
-     * @param candidate
+     * @param accessKey A miner-submitted access key. (Used to prevent abuse)
+     * @param miner     Performing proof-of-work calculations.
+     * @param candidate A nonce that satisfies the current challenge.
      */
     function mint(
-        /* (Mutable) Constraints */
-        bool isPublic,
-        int epoch,
-
-        /* (Immutable) Constraints */
-        /* (bytes20) assetid */
-        bytes8 assetid_1,
-        bytes8 assetid_2,
-        bytes4 assetid_3,
-        /* (bytes20) access */
-        bytes8 access_1,
-        bytes8 access_2,
-        bytes4 access_3,
-        /* (bytes20) guardian */
-        bytes8 guardian_1,
-        bytes8 guardian_2,
-        bytes4 guardian_3,
-        int difficulty,
-        int handicap,
-
-        /* (Miner) Parameters */
-        /* (bytes20) miner */
-        bytes8 miner_1,
-        bytes8 miner_2,
-        bytes4 miner_3,
-        /* (bytes32) candidate */
-        bytes8 candidate_1,
-        bytes8 candidate_2,
-        bytes8 candidate_3,
-        bytes8 candidate_4,
-        /* (bytes20) no-op */
-        bytes8 noop_1,
-        bytes8 noop_2,
-        bytes8 noop_3,
-        bytes8 noop_4,
+        bytes20 accessKey,
+        bytes20 miner,
+        bytes32 candidate,
     ) {
         /**
          * Initial Mining Rewards
@@ -99,7 +59,7 @@ contract Polymorph() {
          *
          * NOTE: This is hard-coded and CANNOT be changed EVER!!
          */
-        int INITIAL_MINING_REWARDS = 5000000000;
+        // int INITIAL_MINING_REWARDS = 5000000000;
 
         /**
          * Season Length
@@ -115,56 +75,43 @@ contract Polymorph() {
          * NOTE: Variance exists in relation to Nexa block generation.
          * NOTE: This is hard-coded and CANNOT be changed EVER!!
          */
-        int SEASON_LENGTH = 64800;
+        // int SEASON_LENGTH = 64800;
 
         /* Set basis points (scaling factor). */
         // int BASIS_POINTS = 10000;
+
+        // * @param assetid    The Hash160 of the primary asset. (used for data analytics) [NOTE: This is the ONLY "visible" parameter.]
+        // * @param guardian   A hash used to verify the correct nonce.
+        // * @param difficulty Number of leading zeroes required to pass hashing challenge.
+        // * @param handicap   Used to add additional "challenge" to the Public mining reward. (expected to a factor of GPU vs CPU)
+        bool IS_PUBLIC = true;
+        // int EPOCH = 8;
+        // bytes20 ASSETID = 0x5DC46900D1A7B95C22801DFADE9F1A19C9CD8D6F;
+        bytes20 GUARDIAN = 0xA78565369997329B7945357F9657B7EAE6D98E14; // hi there!
+        int MAX_TARGET = int(0xFFFFFFFFFFFFFF00); // NOTE: PADDING IS REQUIRED!!
+        int MIN_TARGET = int(0xFFFF00); // NOTE: PADDING IS REQUIRED!!
+        int HANDICAP = 2;
 
         //----------------------------------------------------------------------
         // BEGIN CONTRACT SECURITY & PRESERVATION VERIFICATION
         //----------------------------------------------------------------------
 
         /* Set token group id. */
-        bytes32 tokenGroupId = bytes32(
-            tx.inputs[this.activeInputIndex].tokenGroupId);
+        // bytes32 tokenGroupId = bytes32(
+        //     tx.inputs[this.activeInputIndex].tokenGroupId);
 
         /* Verify (registered) asset id. */
-        // require(hash160(tokenGroupId) == assetid);
-tokenGroupId = tokenGroupId;
+        // require(hash160(tokenGroupId) == ASSETID);
 
-        /* Re-build asset id. */
-        bytes20 assetid = (assetid_1 + assetid_2 + assetid_3);
-require(assetid != 0x);
-
-        /* Increment epoch (by one). */
-        epoch = (epoch + 1);
-
-        /* Convert to bytes. */
-        // bytes epochBytes = bytes(epoch);
-        bytes publicLock = bytes(epoch);
-
-        /* Set to PUSH script. */
-        // bytes epochPush = (bytes(epochBytes.length) + epochBytes);
-
-        /* Parse the token id and amount (42 bytes). */
-        // bytes iTokenBytes, bytes iHolder = tx.inputs[this.activeInputIndex]
-        //     .lockingBytecode
-        //     .split(42);
-
-        /* Build "public" locking bytes. */
-        // NOTE: `OP_TRUE` or `OP_1` is encoded as `0x51`.
-// FIXME: MUST account for epoch byte-length changes (i.e. 2->4->8)!!
-//        (maybe this can be handled by the Admin @ epochs 0xFF and 0xFFFF ??)
-        // bytes publicLock = iTokenBytes + 0x51 + epochPush + iHolder
-        //     .split(epochPush.length + 1)[1];
-
-        /* Verify contract lock remains unchanged (except `public` flag). */
+        /* Verify contract lock remains unchanged. */
         // NOTE: Parameter updates are "managed" by the Manager.
         //       (see the Manager contract below)
+        // NOTE: Only the Manager can set the contract to Output #0
         // require(
-        //     tx.outputs[this.activeInputIndex].lockingBytecode == publicLock
+        //     tx.outputs[this.activeInputIndex]
+        //         .lockingBytecode == tx.inputs[1]
+        //             .lockingBytecode
         // );
-publicLock = publicLock;
 
         // NOTE: Token (mint authority) value is preserved
         //       in the locking script.
@@ -177,33 +124,14 @@ publicLock = publicLock;
         // BEGIN MINING CHALLENGE VERIFICATION
         //----------------------------------------------------------------------
 
-        /* Verify Guardian access code. */
+        /* Verify Guardian access key. */
         // NOTE: See the Wisebox Docs for more information about
         //       the use of Guardians.
-        // require(hash160(access) == guardian);
-
-        /* Re-build access. */
-        bytes20 access = (access_1 + access_2 + access_3);
-access = access;
-
-        /* Re-build guardian. */
-        bytes20 guardian = (guardian_1 + guardian_2 + guardian_3);
-guardian = guardian;
+        require(hash160(accessKey) == GUARDIAN);
 
         /* Set entropy from the previous transaction hash. */
         bytes entropy = tx.inputs[this.activeInputIndex]
             .outpointTransactionHash;
-
-        /* Re-build miner. */
-        bytes20 miner = (miner_1 + miner_2 + miner_3);
-
-        /* Re-build candidate. */
-        // bytes32 candidate = (candidate_1 + candidate_2 + candidate_3 + candidate_4);
-        bytes32 candidate = (candidate_1 + candidate_2 + candidate_3 + candidate_4);
-
-/* Re-build no-op. */
-bytes32 noop = (noop_1 + noop_2 + noop_3 + noop_4);
-noop = noop;
 
         /**
          * Hashing Challenge
@@ -247,39 +175,43 @@ noop = noop;
                 // )
             )
         );
-solution = solution;
+// solution = solution.split(8)[0];
+require(solution != 0x00);
 
         /* Generate a submission that meets the difficulty requirement. */
-        // NOTE: Take the 1st 8 bytes (64-bits) and use the built-in
+        // NOTE: Take the 1st 7 bytes (56-bits) and use the built-in
         //       arithmetic functions.
-        int submission = 1;//int(solution.split(8)[0]);
+        // int submission = int(solution.split(7)[0] + 0x00); // NOTE: PADDING IS REQUIRED!!
+        int submission = int(candidate.split(7)[0] + 0x00); // NOTE: PADDING IS REQUIRED!!
+        // int submission = int(0x7FFFFF8000000000); // NOTE: PADDING IS REQUIRED!!
 
         /* Verify public rewards round. */
-        if (isPublic) {
+        // NOTE: Only the Manager can set the contract to Output #0
+        if (IS_PUBLIC) {
             /* Verify UTXO age is AT LEAST ONE BLOCK. */
             // NOTE: Prevents a denial-of-service (DoS) hash attack by FPGAs or ASICs.
             // NOTE: Private rewards are availalbe IMMEDIATELY after an Admin round reset.
             // require(tx.age >= 1);
 
             /**
-             * Public Difficulty
+             * Public Target
              *
-             * Re-calculate the difficulty for desktop/GPU miners.
+             * Re-calculate the target for desktop/GPU miners.
              *
              * NOTE: A 256-bit solution has a maximum of (32) bytes.
              *
-             * NOTE: There is a (hard-coded) maximum difficulty of
+             * NOTE: There is a (hard-coded) minimum target of
              *       0xFF (i.e. 18 zeros).
              */
-            int publicDifficulty = max((difficulty / handicap), int(0xFF));
-publicDifficulty = publicDifficulty;
+            int publicTarget = max((MAX_TARGET / HANDICAP), MIN_TARGET);
+// publicTarget = publicTarget;
             /* Verify the FINAL submission. */
-            // require(submission <= publicDifficulty);
+            require(submission <= publicTarget);
+            // require(submission <= MAX_TARGET);
         } else {
             /* Verify the FINAL submission. */
-            // require(submission <= difficulty);
+            require(submission <= MAX_TARGET);
         }
-submission = submission;
 
         //----------------------------------------------------------------------
         // END MINING CHALLENGE VERIFICATION
@@ -290,14 +222,14 @@ submission = submission;
         //----------------------------------------------------------------------
 
         /* Calculate current season. */
-        int currentSeason = ((epoch / SEASON_LENGTH) + 1);
-
-        /* Calculate Mining reward. */
-        int miningReward = (INITIAL_MINING_REWARDS / currentSeason);
-
-        /* Set authority output amount. */
-        int authOutputAmount = tx.inputs[this.activeInputIndex]
-            .tokenAmount;
+        // int currentSeason = ((EPOCH / SEASON_LENGTH) + 1);
+        //
+        // /* Calculate Mining reward. */
+        // int miningReward = (INITIAL_MINING_REWARDS / currentSeason);
+        //
+        // /* Set authority output amount. */
+        // int authOutputAmount = tx.inputs[this.activeInputIndex]
+        //     .tokenAmount;
 
         /* Verify Mining (token) reward *exact* amount. */
         // NOTE: Verification is NOT for a single output, but for
@@ -307,8 +239,8 @@ submission = submission;
         // require(
         //     tx.groupAmountOut(tokenGroupId) == (miningReward + authOutputAmount)
         // );
-miningReward = miningReward;
-authOutputAmount = authOutputAmount;
+// miningReward = miningReward;
+// authOutputAmount = authOutputAmount;
 
         //----------------------------------------------------------------------
         // END MINING REWARD VERIFICATION
