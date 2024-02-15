@@ -80,16 +80,19 @@ contract Polymorph() {
         /* Set basis points (scaling factor). */
         // int BASIS_POINTS = 10000;
 
-        // * @param assetid    The Hash160 of the primary asset. (used for data analytics) [NOTE: This is the ONLY "visible" parameter.]
-        // * @param guardian   A hash used to verify the correct nonce.
-        // * @param difficulty Number of leading zeroes required to pass hashing challenge.
-        // * @param handicap   Used to add additional "challenge" to the Public mining reward. (expected to a factor of GPU vs CPU)
         bool IS_PUBLIC = true;
         int EPOCH = 1337;
-        // bytes20 ASSETID = 0x5DC46900D1A7B95C22801DFADE9F1A19C9CD8D6F;
+
+        // NOTE: A hash used to verify the correct nonce.
         bytes20 GUARDIAN = 0xA78565369997329B7945357F9657B7EAE6D98E14; // hi there!
+
+        // NOTE: Number of leading zeroes required to pass hashing challenge.
         int MAX_TARGET = int(0xFFFFFFFFFFFFFF00); // NOTE: PADDING IS REQUIRED!!
+
+        // NOTE: Number of leading zeroes required to pass hashing challenge.
         int MIN_TARGET = int(0xFFFF00); // NOTE: PADDING IS REQUIRED!!
+
+        // NOTE: Used to add additional "challenge" to the Public mining reward. (expected to a factor of GPU vs CPU)
         int HANDICAP = 2;
 
         //----------------------------------------------------------------------
@@ -160,8 +163,8 @@ contract Polymorph() {
                         // hash160(
                             // sha256(
                                 // ripemd160(
-                                    // sha1(miner + entropy + candidate)
-                                    sha1(entropy)
+                                    sha1(miner + entropy + candidate)
+                                    // sha1(entropy + candidate)
                                 // )
                             // )
                         // )
@@ -169,17 +172,13 @@ contract Polymorph() {
                 // )
             )
         );
-// solution = solution.split(8)[0];
-// require(solution == miner);
-candidate = candidate;
-miner = miner;
+// candidate = candidate;
+// miner = miner;
 
         /* Generate a submission that meets the difficulty requirement. */
         // NOTE: Take the 1st 7 bytes (56-bits) and use the built-in
         //       arithmetic functions.
         int submission = int(solution.split(7)[0] + 0x00); // NOTE: PADDING IS REQUIRED!!
-        // int submission = int(candidate.split(7)[0] + 0x00); // NOTE: PADDING IS REQUIRED!!
-        // int submission = int(0x7FFFFF8000000000); // NOTE: PADDING IS REQUIRED!!
 
         /* Verify public rewards round. */
         // NOTE: Only the Manager can set the contract to Output #0
@@ -200,10 +199,9 @@ miner = miner;
              *       0xFF (i.e. 18 zeros).
              */
             int publicTarget = max((MAX_TARGET / HANDICAP), MIN_TARGET);
-// publicTarget = publicTarget;
+
             /* Verify the FINAL submission. */
             require(submission <= publicTarget);
-            // require(submission <= MAX_TARGET);
         } else {
             /* Verify the FINAL submission. */
             require(submission <= MAX_TARGET);
