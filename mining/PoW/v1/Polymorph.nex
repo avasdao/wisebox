@@ -59,7 +59,7 @@ contract Polymorph() {
          *
          * NOTE: This is hard-coded and CANNOT be changed EVER!!
          */
-        // int INITIAL_MINING_REWARDS = 5000000000;
+        int INITIAL_MINING_REWARDS = 5000000000;
 
         /**
          * Season Length
@@ -75,7 +75,7 @@ contract Polymorph() {
          * NOTE: Variance exists in relation to Nexa block generation.
          * NOTE: This is hard-coded and CANNOT be changed EVER!!
          */
-        // int SEASON_LENGTH = 64800;
+        int SEASON_LENGTH = 64800;
 
         /* Set basis points (scaling factor). */
         // int BASIS_POINTS = 10000;
@@ -85,7 +85,7 @@ contract Polymorph() {
         // * @param difficulty Number of leading zeroes required to pass hashing challenge.
         // * @param handicap   Used to add additional "challenge" to the Public mining reward. (expected to a factor of GPU vs CPU)
         bool IS_PUBLIC = true;
-        // int EPOCH = 8;
+        int EPOCH = 1337;
         // bytes20 ASSETID = 0x5DC46900D1A7B95C22801DFADE9F1A19C9CD8D6F;
         bytes20 GUARDIAN = 0xA78565369997329B7945357F9657B7EAE6D98E14; // hi there!
         int MAX_TARGET = int(0xFFFFFFFFFFFFFF00); // NOTE: PADDING IS REQUIRED!!
@@ -96,22 +96,15 @@ contract Polymorph() {
         // BEGIN CONTRACT SECURITY & PRESERVATION VERIFICATION
         //----------------------------------------------------------------------
 
-        /* Set token group id. */
-        // bytes32 tokenGroupId = bytes32(
-        //     tx.inputs[this.activeInputIndex].tokenGroupId);
-
-        /* Verify (registered) asset id. */
-        // require(hash160(tokenGroupId) == ASSETID);
-
         /* Verify contract lock remains unchanged. */
         // NOTE: Parameter updates are "managed" by the Manager.
         //       (see the Manager contract below)
         // NOTE: Only the Manager can set the contract to Output #0
-        // require(
-        //     tx.outputs[this.activeInputIndex]
-        //         .lockingBytecode == tx.inputs[1]
-        //             .lockingBytecode
-        // );
+        require(
+            tx.outputs[this.activeInputIndex]
+                .lockingBytecode == tx.inputs[this.activeInputIndex]
+                    .lockingBytecode
+        );
 
         // NOTE: Token (mint authority) value is preserved
         //       in the locking script.
@@ -130,7 +123,7 @@ contract Polymorph() {
         require(hash160(accessKey) == GUARDIAN);
 
         /* Set entropy from the previous transaction hash. */
-        bytes entropy = tx.inputs[this.activeInputIndex]
+        bytes32 entropy = tx.inputs[this.activeInputIndex]
             .outpointTransactionHash;
 
         /**
@@ -160,14 +153,15 @@ contract Polymorph() {
          * NOTE: RIPEMD-160 will always used as the final hash.
          *       (to maintain stable & consistent difficulty calculations??)
          */
-        bytes solution = (
+        bytes20 solution = (
             hash160(
                 // ripemd160( // NOTE: duplicated
                     // hash256(
                         // hash160(
                             // sha256(
                                 // ripemd160(
-                                    sha1(miner + entropy + candidate)
+                                    // sha1(miner + entropy + candidate)
+                                    sha1(entropy)
                                 // )
                             // )
                         // )
@@ -176,13 +170,15 @@ contract Polymorph() {
             )
         );
 // solution = solution.split(8)[0];
-require(solution != 0x00);
+// require(solution == miner);
+candidate = candidate;
+miner = miner;
 
         /* Generate a submission that meets the difficulty requirement. */
         // NOTE: Take the 1st 7 bytes (56-bits) and use the built-in
         //       arithmetic functions.
-        // int submission = int(solution.split(7)[0] + 0x00); // NOTE: PADDING IS REQUIRED!!
-        int submission = int(candidate.split(7)[0] + 0x00); // NOTE: PADDING IS REQUIRED!!
+        int submission = int(solution.split(7)[0] + 0x00); // NOTE: PADDING IS REQUIRED!!
+        // int submission = int(candidate.split(7)[0] + 0x00); // NOTE: PADDING IS REQUIRED!!
         // int submission = int(0x7FFFFF8000000000); // NOTE: PADDING IS REQUIRED!!
 
         /* Verify public rewards round. */
@@ -191,7 +187,7 @@ require(solution != 0x00);
             /* Verify UTXO age is AT LEAST ONE BLOCK. */
             // NOTE: Prevents a denial-of-service (DoS) hash attack by FPGAs or ASICs.
             // NOTE: Private rewards are availalbe IMMEDIATELY after an Admin round reset.
-            // require(tx.age >= 1);
+            require(tx.age >= 1);
 
             /**
              * Public Target
@@ -222,25 +218,23 @@ require(solution != 0x00);
         //----------------------------------------------------------------------
 
         /* Calculate current season. */
-        // int currentSeason = ((EPOCH / SEASON_LENGTH) + 1);
-        //
-        // /* Calculate Mining reward. */
-        // int miningReward = (INITIAL_MINING_REWARDS / currentSeason);
-        //
-        // /* Set authority output amount. */
-        // int authOutputAmount = tx.inputs[this.activeInputIndex]
-        //     .tokenAmount;
+        int currentSeason = ((EPOCH / SEASON_LENGTH) + 1);
 
-        /* Verify Mining (token) reward *exact* amount. */
-        // NOTE: Verification is NOT for a single output, but for
-        //       the TOTAL output amount of the FULL transaction.
-        //       (especially convenient for mining pool payouts)
-        // NOTE: Treasury Tribute is validated elsewhere.
-        // require(
-        //     tx.groupAmountOut(tokenGroupId) == (miningReward + authOutputAmount)
-        // );
-// miningReward = miningReward;
-// authOutputAmount = authOutputAmount;
+        /* Calculate Mining reward. */
+        int miningReward = (INITIAL_MINING_REWARDS / currentSeason);
+
+        /* Set token group id. */
+        bytes32 tokenGroupId = bytes32(
+            tx.inputs[this.activeInputIndex].tokenGroupId);
+
+        /**
+         * Verify Mining (token) reward *exact* amount.
+         * NOTE: Verification is NOT for a single output, but for
+         *       the TOTAL output amount of the FULL transaction.
+         *       (especially convenient for mining pool payouts)
+         * NOTE: Treasury Tribute is validated elsewhere.
+         */
+        require(tx.groupAmountOut(tokenGroupId) == miningReward);
 
         //----------------------------------------------------------------------
         // END MINING REWARD VERIFICATION
@@ -253,22 +247,23 @@ require(solution != 0x00);
         /* Set Treasury. */
         // NOTE: MUST be hard-coded for each instance of this template.
         // bytes20 TREASURY = 0x0000000000000000000000000000000000000000;
+        // bytes20 TREASURY = 0x80631EC9FE69DE771CCC67ADCE8DD81B22252590; // Ava's Treasury - nexa:nqtsq5g5sp33aj07d808w8xvv7kuarwcrv3z2fvskw2ej7dj
+        bytes20 TREASURY = 0x6d2235e60b3c2f1a3ce5032f94e85173411f598b; // Charlie - nexareg:nqtsq5g5d53rtest8sh35089qvhef6z3wdq37kvt047ajyz7
 
         /* Set locking (bytecode) length. */
         // NOTE: If required, MUST be the 2nd output of the transaction.
-        // int lockLen = tx.outputs[1].lockingBytecode.length;
+        int lockLen = tx.outputs[1].lockingBytecode.length;
 
         /* Verify Treasury (bytecode). */
-        // require(tx.outputs[1].lockingBytecode
-        //     .split(lockLen - 20)[1] == TREASURY);
+        require(tx.outputs[1].lockingBytecode
+            .split(lockLen - 20)[1] == TREASURY);
 
         /* Calculate Treasury Tribute amount. */
         // int tributeAmount = (miningReward * tribute) / BASIS_POINTS;
         int tributeAmount = 400000000; // 8.00%
 
         /* Verfify Treasury Tribute amount. */
-        // require(tx.outputs[1].tokenAmount >= tributeAmount);
-require(tributeAmount >= 0);
+        require(tx.outputs[1].tokenAmount >= tributeAmount);
 
         //----------------------------------------------------------------------
         // END TREASURY TRIBUTE VERIFICATION
@@ -288,6 +283,7 @@ require(tributeAmount >= 0);
         /* Set Administrator. */
         // NOTE: MUST be hard-coded for each instance of this template.
         bytes20 ADMIN = 0x0000000000000000000000000000000000000000;
+        // bytes20 ADMIN = 0xD9236063BC604F8408A7E12050C4F67BB46BDCFE; // 0xShomari - ??
 
         /* Set authorized sub-group id. */
         bytes authorized = tx.inputs[1].tokenSubgroupId;
