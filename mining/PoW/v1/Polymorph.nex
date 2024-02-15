@@ -280,8 +280,9 @@ contract Polymorph() {
     function manage() {
         /* Set Administrator. */
         // NOTE: MUST be hard-coded for each instance of this template.
-        bytes20 ADMIN = 0x0000000000000000000000000000000000000000;
-        // bytes20 ADMIN = 0xD9236063BC604F8408A7E12050C4F67BB46BDCFE; // 0xShomari - ??
+        // bytes20 ADMIN = 0x0000000000000000000000000000000000000000;
+        // bytes20 ADMIN = 0x0000000000000000000000000000000000000000; // 0xShomari - ??
+        bytes20 ADMIN = 0xD9236063BC604F8408A7E12050C4F67BB46BDCFE; // Alice Token - 845ee20d7b603506d4fc597b3e0a1a14be9a96fbcd8bb1205f8a9a034a9a0000
 
         /* Set authorized sub-group id. */
         bytes authorized = tx.inputs[1].tokenSubgroupId;
