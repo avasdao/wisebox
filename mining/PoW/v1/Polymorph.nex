@@ -80,20 +80,23 @@ contract Polymorph() {
         /* Set basis points (scaling factor). */
         // int BASIS_POINTS = 10000;
 
+        // FIXME: FOR DEVELOPMENT PURPOSES ONLY
         bool IS_PUBLIC = true;
+
+        // FIXME: FOR DEVELOPMENT PURPOSES ONLY
         int EPOCH = 1337;
 
-        // NOTE: A hash used to verify the correct nonce.
-        bytes20 GUARDIAN = 0xA78565369997329B7945357F9657B7EAE6D98E14; // hi there!
+        // NOTE: Hash used to verify the access key.
+        bytes20 GUARDIAN = 0x8C26E10AA399C5E2D4FF7C449C7279A5B5708F0F; // Merhaba Satoshi!
 
-        // NOTE: Number of leading zeroes required to pass hashing challenge.
+        // NOTE: Maximum target value for submission.
         int MAX_TARGET = int(0xFFFFFFFFFFFFFF00); // NOTE: PADDING IS REQUIRED!!
 
-        // NOTE: Number of leading zeroes required to pass hashing challenge.
+        // NOTE: Minimum target value for submission.
         int MIN_TARGET = int(0xFFFF00); // NOTE: PADDING IS REQUIRED!!
 
-        // NOTE: Used to add additional "challenge" to the Public mining reward. (expected to a factor of GPU vs CPU)
-        int HANDICAP = 2;
+        // NOTE: Used to add additional "difficulty" to the Public mining reward. (expected to a factor of GPU vs CPU)
+        int HANDICAP = 8;
 
         //----------------------------------------------------------------------
         // BEGIN CONTRACT SECURITY & PRESERVATION VERIFICATION
@@ -172,6 +175,7 @@ contract Polymorph() {
                 // )
             )
         );
+
 // candidate = candidate;
 // miner = miner;
 
@@ -244,9 +248,9 @@ contract Polymorph() {
 
         /* Set Treasury. */
         // NOTE: MUST be hard-coded for each instance of this template.
-        // bytes20 TREASURY = 0x0000000000000000000000000000000000000000;
+        bytes20 TREASURY = 0x0000000000000000000000000000000000000000;
         // bytes20 TREASURY = 0x80631EC9FE69DE771CCC67ADCE8DD81B22252590; // Ava's Treasury - nexa:nqtsq5g5sp33aj07d808w8xvv7kuarwcrv3z2fvskw2ej7dj
-        bytes20 TREASURY = 0x6d2235e60b3c2f1a3ce5032f94e85173411f598b; // Charlie - nexareg:nqtsq5g5d53rtest8sh35089qvhef6z3wdq37kvt047ajyz7
+        // bytes20 TREASURY = 0x6d2235e60b3c2f1a3ce5032f94e85173411f598b; // Charlie - nexareg:nqtsq5g5d53rtest8sh35089qvhef6z3wdq37kvt047ajyz7
 
         /* Set locking (bytecode) length. */
         // NOTE: If required, MUST be the 2nd output of the transaction.
@@ -280,9 +284,9 @@ contract Polymorph() {
     function manage() {
         /* Set Administrator. */
         // NOTE: MUST be hard-coded for each instance of this template.
-        // bytes20 ADMIN = 0x0000000000000000000000000000000000000000;
-        // bytes20 ADMIN = 0x0000000000000000000000000000000000000000; // 0xShomari - ??
-        bytes20 ADMIN = 0xD9236063BC604F8408A7E12050C4F67BB46BDCFE; // Alice Token - 845ee20d7b603506d4fc597b3e0a1a14be9a96fbcd8bb1205f8a9a034a9a0000
+        bytes20 ADMIN = 0x0000000000000000000000000000000000000000;
+        // bytes20 ADMIN = 0xBBBC1D4BD17736410896DA4E12CD686864E7038B; // Dorian Nakmoto - cacf3d958161a925c28a970d3c40deec1a3fe06796fe1b4a7b68f377cdb90000e6394ffe5cb20f6e2b9e5cfc4d6e8b4f6438aefe73b1e2d7d85e7549bd47b23b
+        // bytes20 ADMIN = 0xD9236063BC604F8408A7E12050C4F67BB46BDCFE; // Alice - 845ee20d7b603506d4fc597b3e0a1a14be9a96fbcd8bb1205f8a9a034a9a00001337330000000000000000000000000000000000000000000000000088888888
 
         /* Set authorized sub-group id. */
         bytes authorized = tx.inputs[1].tokenSubgroupId;
@@ -290,5 +294,4 @@ contract Polymorph() {
         /* Verify Admin authorization. */
         require(hash160(authorized) == ADMIN);
     }
-
 }
