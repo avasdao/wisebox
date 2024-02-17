@@ -98,6 +98,21 @@ contract Polymorph() {
         // NOTE: Used to add additional "difficulty" to the Public mining reward. (expected to a factor of GPU vs CPU)
         int HANDICAP = 8;
 
+        /**
+         * Restrict Outputs
+         *
+         * Only allow the following outputs:
+         *   1. contract
+         *   2. treasury tribute
+         *   3. miner reward
+         *   4. (optional) change
+         */
+        int MAXIMUM_OUTPUTS = 4;
+
+        /* Set token group id. */
+        bytes32 tokenGroupId = bytes32(
+            tx.inputs[this.activeInputIndex].tokenGroupId);
+
         //----------------------------------------------------------------------
         // BEGIN CONTRACT SECURITY & PRESERVATION VERIFICATION
         //----------------------------------------------------------------------
@@ -114,6 +129,14 @@ contract Polymorph() {
 
         // NOTE: Token (mint authority) value is preserved
         //       in the locking script.
+
+        /* Verify (maximum) outputs. */
+        require(tx.outputs.length <= MAXIMUM_OUTPUTS);
+
+        /* Verify (coin) change. */
+        if (tx.outputs.length == MAXIMUM_OUTPUTS) {
+            require(int(tx.outputs[3].tokenGroupId) == 0);
+        }
 
         //----------------------------------------------------------------------
         // END CONTRACT SECURITY & PRESERVATION VERIFICATION
@@ -216,40 +239,13 @@ contract Polymorph() {
         //----------------------------------------------------------------------
 
         //----------------------------------------------------------------------
-        // BEGIN MINING REWARD VERIFICATION
-        //----------------------------------------------------------------------
-
-        /* Calculate current season. */
-        int currentSeason = ((EPOCH / SEASON_LENGTH) + 1);
-
-        /* Calculate Mining reward. */
-        int miningReward = (INITIAL_MINING_REWARDS / currentSeason);
-
-        /* Set token group id. */
-        bytes32 tokenGroupId = bytes32(
-            tx.inputs[this.activeInputIndex].tokenGroupId);
-
-        /**
-         * Verify Mining (token) reward *exact* amount.
-         * NOTE: Verification is NOT for a single output, but for
-         *       the TOTAL output amount of the FULL transaction.
-         *       (especially convenient for mining pool payouts)
-         * NOTE: Treasury Tribute is validated elsewhere.
-         */
-        require(tx.groupAmountOut(tokenGroupId) == miningReward);
-
-        //----------------------------------------------------------------------
-        // END MINING REWARD VERIFICATION
-        //----------------------------------------------------------------------
-
-        //----------------------------------------------------------------------
         // BEGIN TREASURY TRIBUTE VERIFICATION
         //----------------------------------------------------------------------
 
         /* Set Treasury. */
         // NOTE: MUST be hard-coded for each instance of this template.
-        bytes20 TREASURY = 0x0000000000000000000000000000000000000000;
-        // bytes20 TREASURY = 0x80631EC9FE69DE771CCC67ADCE8DD81B22252590; // Ava's Treasury - nexa:nqtsq5g5sp33aj07d808w8xvv7kuarwcrv3z2fvskw2ej7dj
+        // bytes20 TREASURY = 0x1111111111111111111111111111111111111111; // template placeholder
+        bytes20 TREASURY = 0x80631EC9FE69DE771CCC67ADCE8DD81B22252590; // Ava's Treasury - nexa:nqtsq5g5sp33aj07d808w8xvv7kuarwcrv3z2fvskw2ej7dj
         // bytes20 TREASURY = 0x6d2235e60b3c2f1a3ce5032f94e85173411f598b; // Charlie - nexareg:nqtsq5g5d53rtest8sh35089qvhef6z3wdq37kvt047ajyz7
 
         /* Set locking (bytecode) length. */
@@ -267,8 +263,43 @@ contract Polymorph() {
         /* Verfify Treasury Tribute amount. */
         require(tx.outputs[1].tokenAmount >= tributeAmount);
 
+        /* Verify Treasury asset. */
+        require(tx.outputs[1].tokenGroupId == tokenGroupId);
+
         //----------------------------------------------------------------------
         // END TREASURY TRIBUTE VERIFICATION
+        //----------------------------------------------------------------------
+
+        //----------------------------------------------------------------------
+        // BEGIN MINING REWARD VERIFICATION
+        //----------------------------------------------------------------------
+
+        /* Calculate current season. */
+        int currentSeason = ((EPOCH / SEASON_LENGTH) + 1);
+
+        /* Calculate Mining reward. */
+        int miningReward = (INITIAL_MINING_REWARDS / currentSeason);
+
+        /* Calculate Miner reward. */
+        // int minerReward = (miningReward - tributeAmount);
+
+        /**
+         * Verify Mining (token) reward *exact* amount.
+         * NOTE: Verification is NOT for a single output, but for
+         *       the TOTAL output amount of the FULL transaction.
+         *       (especially convenient for mining pool payouts)
+         * NOTE: Treasury Tribute is validated elsewhere.
+         */
+        require(tx.groupAmountOut(tokenGroupId) == miningReward);
+
+        /* Verfify Miner reward amount. */
+        // require(tx.outputs[2].tokenAmount == minerReward);
+
+        /* Verify Miner asset. */
+        require(tx.outputs[2].tokenGroupId == tokenGroupId);
+
+        //----------------------------------------------------------------------
+        // END MINING REWARD VERIFICATION
         //----------------------------------------------------------------------
     }
 
@@ -284,8 +315,8 @@ contract Polymorph() {
     function manage() {
         /* Set Administrator. */
         // NOTE: MUST be hard-coded for each instance of this template.
-        bytes20 ADMIN = 0x0000000000000000000000000000000000000000;
-        // bytes20 ADMIN = 0xBBBC1D4BD17736410896DA4E12CD686864E7038B; // Dorian Nakmoto - cacf3d958161a925c28a970d3c40deec1a3fe06796fe1b4a7b68f377cdb90000e6394ffe5cb20f6e2b9e5cfc4d6e8b4f6438aefe73b1e2d7d85e7549bd47b23b
+        // bytes20 ADMIN = 0x2222222222222222222222222222222222222222; // template placeholder
+        bytes20 ADMIN = 0xBBBC1D4BD17736410896DA4E12CD686864E7038B; // Dorian Nakmoto - cacf3d958161a925c28a970d3c40deec1a3fe06796fe1b4a7b68f377cdb90000e6394ffe5cb20f6e2b9e5cfc4d6e8b4f6438aefe73b1e2d7d85e7549bd47b23b
         // bytes20 ADMIN = 0xD9236063BC604F8408A7E12050C4F67BB46BDCFE; // Alice - 845ee20d7b603506d4fc597b3e0a1a14be9a96fbcd8bb1205f8a9a034a9a00001337330000000000000000000000000000000000000000000000000088888888
 
         /* Set authorized sub-group id. */
