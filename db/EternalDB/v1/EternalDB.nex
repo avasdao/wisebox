@@ -1,0 +1,87 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ *
+ * Copyright (c) 2024 Ava's DAO
+ * Released under the MIT License.
+ *
+ * The "Eternal" Database
+ *
+ * An everlasting (on-chain) data storage for metadata.
+ *
+ * NOTES
+ * --------------------
+ * All data MUST be less than XX bytes.
+ *
+ * ONLY the FIRST saved content identifier (CID) should be considered valid
+ * by supported Eternal indexers.
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : EDB01
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://domain.tld
+ *   - https://avasdao.org
+ *
+ * @param owner
+ * @param key
+ * @param value
+ *
+ */
+contract EternalDB(
+    pubkey owner,
+    bytes32 visible persona,
+    // int visible unused value,
+) {
+    /**
+     * Save
+     *
+     * Write raw data to the blockchain.
+     *
+     * (provide optional permissions)
+     *
+     * NOTE: The maximum payload size is XX bytes.
+     *
+     * @param cid
+     * @param rawData
+     */
+    function save(
+        bytes32 cid,
+        bytes rawData,
+        bytes4 permissions,
+    ) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Delete
+     *
+     * TBD..
+     *
+     * @param cid
+     * @param signature
+     */
+    function delete(bytes32 cid) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+}
