@@ -1,7 +1,6 @@
 pragma cashscript >= 0.6.0;
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *
  * Copyright (c) 2022 General Protocols
  * Copyright (c) 2023 Ava's DAO
  * Released under the MIT License.
