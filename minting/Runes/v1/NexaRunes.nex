@@ -1,0 +1,63 @@
+pragma nexscript >= 0.10.0;
+
+/*******************************************************************************
+ * Copyright (c) 2024 XXX
+ * Released under the XXX License.
+ *
+ * Nexa Runes
+ *
+ * Empty contract template.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : RUNES01
+ *
+ * index : TBD..
+ * contractPassword : TBD..
+ * dust : TBD..
+ *
+ * For more information, please visit the following resources:
+ *   - https://nexarunes.onrender.com
+ *   - https://agnar.pages.dev
+ *
+ * @param index
+ * @param contractPassword
+ * @param dust
+ *
+ */
+contract NexaRunes(
+    int index, 
+    int contractPassword,
+    int dust,
+) {
+    /**
+     * Mint
+     *
+     * Mint a new Rune.
+     *
+     * @param password
+     */
+    function mint(int password) {
+        require(index >= 0);
+
+        require(password == contractPassword);
+
+        require(dust == 546);
+
+        int changeAmount = tx.inputs[this.activeInputIndex].value - dust;
+
+        if (changeAmount >= dust) {
+            bytes changeLock = tx.inputs[this.activeInputIndex].lockingBytecode;
+
+            require(tx.outputs[1].lockingBytecode == changeLock);
+
+            require(tx.outputs[1].value == changeAmount);
+        }
+    }
+}
