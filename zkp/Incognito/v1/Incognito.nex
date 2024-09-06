@@ -1,0 +1,112 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ * Copyright (c) 2024 Shomari
+ * Released under the MIT License.
+ *
+ * Incognito
+ *
+ * A Zero Knowledge asset protocol for (L1+) Supernets.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : NITO01
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://nito.cash
+ *   - https://hushyourmoney.com
+ *
+ * @param owner
+ * @param key
+ * @param value
+ *
+ */
+contract Incognito(
+    pubkey owner,
+    bytes32 visible key,
+    int visible unused value,
+) {
+    /**
+     * Mint
+     *
+     * Create a Nito asset from the base currency.
+     *
+     * @param authorized
+     * @param signature
+     */
+    function mint(pubkey authorized, sig signature) {
+        /* Set protocol id. */
+        int PROTOCOL_ID = 'NITO';
+
+        /* Set action id. */
+        int ACTION_ID = 'MINT';
+
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Transfer
+     *
+     * Send Nito assets between two participants.
+     *
+     * @param authorized
+     * @param signature
+     */
+    function transfer(pubkey authorized, sig signature) {
+        /* Set protocol id. */
+        int PROTOCOL_ID = 'NITO';
+
+        /* Set action id. */
+        int ACTION_ID = 'TX';
+
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Redeem
+     *
+     * Redeem a Nito asset back into its base currency.
+     *
+     * @param authorized
+     * @param signature
+     */
+    function redeem(pubkey authorized, sig signature) {
+        /* Set protocol id. */
+        int PROTOCOL_ID = 'NITO';
+
+        /* Set action id. */
+        int ACTION_ID = 'REDEEM';
+
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+}
