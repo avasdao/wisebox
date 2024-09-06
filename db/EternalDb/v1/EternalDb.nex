@@ -15,6 +15,9 @@ pragma nexscript >= 0.2.0;
  * ONLY the FIRST saved content identifier (CID) should be considered valid
  * by supported Eternal indexers.
  *
+ * The `ttl` time-to-live option offers a "prunable" solution for
+ * maintaining healthy UTXO set. (values mimic BIP-68 512-second blocks)
+ *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * Version     : 01
@@ -33,9 +36,10 @@ pragma nexscript >= 0.2.0;
  * @param value
  *
  */
-contract EternalDB(
+contract EternalDb(
     pubkey owner,
     bytes32 visible persona,
+    int visible ttl,
     // int visible unused value,
 ) {
     /**
@@ -46,6 +50,30 @@ contract EternalDB(
      * (provide optional permissions)
      *
      * NOTE: The maximum payload size is XX bytes.
+     *
+     * @param cid
+     * @param rawData
+     */
+    function save(
+        bytes32 cid,
+        bytes rawData,
+        bytes4 permissions,
+    ) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Prune
+     *
+     * After the timeout has been reached, the UTXO can be "pruned",
+     * by ANYONE, including Wisegal bots.
      *
      * @param cid
      * @param rawData
