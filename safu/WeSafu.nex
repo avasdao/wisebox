@@ -4,9 +4,9 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * Group Safu
+ * We Safu
  *
- * TBD
+ * A group treasury.
  *
  * NOTES
  * --------------------
@@ -16,7 +16,7 @@ pragma nexscript >= 0.2.0;
  *
  * Version     : 01
  * Script Hash : 0x0000000000000000000000000000000000000000
- * Namespace   : OURSAFU01
+ * Namespace   : WESAFU01
  *
  * owner : Party whom will receive the payouts.
  * param : A very useful parameter.

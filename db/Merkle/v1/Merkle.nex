@@ -4,19 +4,27 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * Treasury Safu
+ * Merkle
  *
- * TBD
+ * Empty contract template.
  *
  * NOTES
  * --------------------
- * TBD..
+ * Merkel Tree height is calculated with:
+ * Math.floor(Math.log2(nElements - 1) + 1)
+ *
+ * 160-bit key set (~1.4615^48) has height of: 161
+ * 256-bit key set (~1.1579^77) has height of: 817
+ *
+ * IMPORTANT (PRE-FORK) NOTE:
+ * A `merkleRoot` macro is currently "emulated", with a base cost
+ * of x12 opcodes, and an adt'l x5 opcodes per each tree height.
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * Version     : 01
  * Script Hash : 0x0000000000000000000000000000000000000000
- * Namespace   : TREASURY01
+ * Namespace   : BLANK01
  *
  * owner : Party whom will receive the payouts.
  * param : A very useful parameter.
@@ -30,7 +38,7 @@ pragma nexscript >= 0.2.0;
  * @param value
  *
  */
-contract Blank(
+contract Merkle(
     pubkey owner,
     bytes32 visible key,
     int visible unused value,
@@ -40,7 +48,7 @@ contract Blank(
      *
      * TBD..
      *
-     * @param owner
+     * @param authorized
      * @param signature
      */
     function transfer(pubkey authorized, sig signature) {

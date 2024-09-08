@@ -1,51 +1,87 @@
 pragma nexscript >= 0.2.0;
 
 /*******************************************************************************
- * Copyright (c) 2023 Ava's DAO
+ * Copyright (c) 2024 Modenero DAO
  * Released under the MIT License.
  *
- * Oracle
+ * Pythia
  *
- * A contract to verify on-chain Oracle data.
+ * A contract to generate and verify on-chain Oracle data.
  *
  * NOTES
  * --------------------
- * TBD..
+ * ALL on-chain data assertions will default to 1-year TTL.
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  * Version     : 01
  * Script Hash : 0x0000000000000000000000000000000000000000
- * Namespace   : ORACLE01
+ * Namespace   : PYTHIA01
  *
  * owner : Party whom will receive the payouts.
  * param : A very useful parameter.
  *
  * For more information, please visit the following resources:
- *   - https://nexa.exchange/oracles
- *   - https://avasdao.org
+ *   - https://pythia.org
+ *   - https://modenero.com
  *
  * @param owner
  * @param key
  * @param value
  *
  */
-contract PriceOracle(
+contract Pythia(
     pubkey visible oracle,
     int visible expiration,
 ) {
     /**
-     * Verify
+     * Verify Price
      *
      * Determine weather the message data is verified to be
      * from the registered Oracle.
      *
-     * @param authSig
      * @param oracleSig
      * @param oracleMsg
      */
-    function verify(
-        sig authSig,
+    function verifyPrice(
+        datasig oracleSig,
+        bytes oracleMsg,
+    ) {
+        // Extract the template hash from the lockingbytecode
+        bytes templateHash = hash160(this.activeBytecode);
+
+        /* Decode the message { blockHeight, price }. */
+        bytes4 blockHeightBin, bytes4 priceBin = oracleMsg.split(4);
+        int blockHeight = int(blockHeightBin);
+        int price = int(priceBin);
+
+        /* Check that blockHeight is after minBlock. */
+// FIXME Use the AnyHedge "sandwhich" technique to fix a valid window of time.
+        require(blockHeight >= minBlock);
+
+        /* Check that blockHeight is not in the future. */
+        require(tx.time >= blockHeight);
+
+        /* Validate the UTXO persists and remains unchanged. */
+        require(tx.outputs[this.activeInputIndex].lockingBytecode == this.activeBytecode);
+
+        /* Verify transaction (message) data is approved by Oracle. */
+        require(checkDataSig(oracleSig, oracleMsg, oracle));
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(ownerSig, owner));
+    }
+
+    /**
+     * Verify Data
+     *
+     * Determine weather the message data is verified to be
+     * from the registered Oracle.
+     *
+     * @param oracleSig
+     * @param oracleMsg
+     */
+    function verifyData(
         datasig oracleSig,
         bytes oracleMsg,
     ) {
