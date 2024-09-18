@@ -70,8 +70,8 @@ contract Waitlist(
      */
     function cancel(pubkey authorized, sig signature) {
         /* Calculate authorized (public key) hash. */
-        // NOTE: Must match `PUSH AsData(PUSH pubkey)` specification found at
-        //       https://spec.nexa.org/nexa/scriptTemplates.
+        // NOTE: Must match `PUSH AsData(PUSH pubkey)` specification found at:
+        //       https://spec.nexa.org/addresses/scriptTemplates/
         bytes20 authorizedHash = hash160(
             bytes(authorized.length) + authorized);
 

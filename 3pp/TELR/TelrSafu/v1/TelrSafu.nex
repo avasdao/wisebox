@@ -26,7 +26,7 @@ pragma nexscript >= 0.2.0;
  *   - https://modenero.com
  *
  */
-contract TelrWallet(bytes20 owner, int param) {
+contract TelrSafu(bytes20 owner, int param) {
     /**
      * Method Name
      *

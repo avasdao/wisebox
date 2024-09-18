@@ -1,0 +1,103 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ * Copyright (c) 2024 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Time To Cashout
+ *
+ * Allows a maximum time for a (UTXO) Coin to be spent
+ * by its Owner before it is automatically sent to an address
+ * specified by the Owner.
+ *
+ * Auto-bot Friendly
+ *
+ * Automation of this wallet recovery service is managed by auto-bots.
+ * Gratuity is paid to Bots in the $NEXA assets that are
+ * availalbe in the wallet.
+ *
+ * NOTES
+ * --------------------
+ * Auto-bots MUST NOT introduce additional UTXO(s) to this transaction.
+ * The contract's asset restrictions and limitations require that
+ * ALL assets (regardless of owner) are used to calculate the
+ * minimum output value.
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0xBA00B1D67230382FD08D8D4A6506D8E7C4242EB2
+ * Namespace   : CASHOUT01
+ *
+ * owner        : The primary Owner of the wallet.
+ * recoveryPkh  : The (public key hash ) address which is authorized
+ *                to receive the recovered assets.
+ * timeout      : Time to wait (in 512-block seconds) before allowing
+ *                recovery of ALL "unspent" assets.
+ * gratitude    : The amount of satoshis reserved (and guaranteed) to
+ *                compensate the Bot Operator for their efforts.
+ *
+ * Timeout Times
+ *   - 1 HOUR     1 hour         ~7 cycles
+ *   - 1 DAY      1 day        ~169 cycles
+ *   - 1 WEEK     7 days     ~1,181 cycles
+ *   - 1 MONTH    30 days    ~5,063 cycles
+ *   - 1 QUARTER  90 days   ~15,188 cycles
+ *   - 1 YEAR     365 days  ~61,594 cycles
+ * NOTE: Each reservation cycle lasts for 512 seconds; while there are
+ *       exactly 168.75 cycles in a 24 hour day.
+ * (source: https://prestwi.ch/bitcoin-time-locks/)
+ *
+ * For more information, please visit the following resources:
+ *   - https://wisegals.org
+ *   - https://avasdao.org
+ *
+ * @param owner
+ * @param recoveryPkh
+ * @param timeout
+ * @param gratitude
+ *
+ */
+contract TimeToCashout(
+    pubkey owner,
+    bytes20 visible recoveryPkh,
+    int visible gratitude,
+    int visible timeout,
+) {
+    /**
+     * Transfer asset
+     *
+     * Allows the wallet Owner to perform ANY standard wallet transaction
+     * that would otherwise be performed without using a "Cashout" wallet.
+     *
+     * @param signature
+     */
+    function transfer(sig signature) {
+        /* Verify transaction is signed by the Owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Cashout (Unused) Coins
+     *
+     * Will send asset(s) to the predetermined Owner address,
+     * after a specified period of "inactivity" time has passed.
+     *
+     * NOTE: This function requires NO signature authorization,
+     *       and is presumed to be called by an auto-bot.
+     *       (see -> https://nexa.wiki/autobot)
+     */
+    function cashout() {
+        /* Verify UTXO age is AFTER the time to cashout. */
+        require(tx.age >= timeout);
+
+        /* Create Recovery bytecode. */
+        bytes23 recoveryBytecode = new LockingBytecodeP2PKT(recoveryPkh);
+
+        /* Verify Recovery bytecode. */
+        require(tx.outputs[0].lockingBytecode == recoveryBytecode);
+
+        /* Validate amount of $NEXA Owner pays as Gratitude. */
+        require(tx.outputs[0].value >= tx.amountIn - gratitude);
+    }
+}

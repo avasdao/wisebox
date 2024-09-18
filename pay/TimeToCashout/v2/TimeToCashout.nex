@@ -4,9 +4,11 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * We Safu
+ * Time To Cashout
  *
- * A group treasury.
+ * Allows a maximum time for a (UTXO) Coin or Token to be spent
+ * by its Owner before it is automatically sent to an address
+ * specified by the Owner.
  *
  * NOTES
  * --------------------
@@ -14,9 +16,9 @@ pragma nexscript >= 0.2.0;
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
- * Version     : 01
+ * Version     : 02
  * Script Hash : 0x0000000000000000000000000000000000000000
- * Namespace   : WESAFU01
+ * Namespace   : CASHOUT01
  *
  * owner : Party whom will receive the payouts.
  * param : A very useful parameter.
@@ -40,7 +42,7 @@ contract Blank(
      *
      * TBD..
      *
-     * @param owner
+     * @param authorized
      * @param signature
      */
     function transfer(pubkey authorized, sig signature) {

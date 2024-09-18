@@ -1,0 +1,108 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ * Copyright (c) 2024 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Personal Safu
+ *
+ * A personal and/or group treasury.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : SAFU01
+ *
+ * owner : Party whom will receive the payouts.
+ * param : A very useful parameter.
+ *
+ * For more information, please visit the following resources:
+ *   - https://domain.tld
+ *   - https://avasdao.org
+ *
+ * @param owner
+ * @param key
+ * @param value
+ *
+ */
+ contract Safu(
+     bytes20 owner,
+     bytes20 delegate,
+     int nonce,
+ ) {
+     /**
+      * Method Name
+      *
+      * TBD..
+      *
+      * @param owner
+      * @param signature
+      */
+     function transfer(
+         pubkey authorized,
+         sig signature,
+         int nonce,
+     ) {
+         /* Verify authorization message. */
+         if (msg == 0x) {
+             // TODO Verify `authkey` matches `owner`.
+             // TODO OR Verify TOKEN AUTH (aka Persona) matches `delegate`.
+
+             /* Calculate authorized key. */
+             // NOTE: Must match `PUSH AsData(PUSH pubkey)` specification found at:
+             //       https://spec.nexa.org/addresses/scriptTemplates/
+             bytes20 authKey = hash160(
+                 bytes(authorized.length) + authorized);
+
+             /* Validate authorized provider. */
+             require(authKey == owner);
+
+             /* Verify transaction is signed by the owner. */
+             require(checkSig(signature, authorized));
+         } else {
+             /* Build authorization message. */
+             // NOTE: <inputs_total> + <nonce> + <outputs_total>
+             bytes msg = 0x + numToBin(nonce) + 0x;
+
+             /* Verify authorization signature. */
+             require(checkDataSig(signature, msg, owner));
+
+             // TODO Add TOKEN (in/out values) verification.
+         }
+
+         // TODO Increment nonce.
+     }
+
+     /**
+      * Recover
+      *
+      * Allows for the recovery of assets, in the case of unplanned custodial
+      * services termination.
+      *
+      * @param owner
+      * @param signature
+      */
+     function recover(pubkey owner, sig signature) {
+         /* Set dust value. */
+         int DUST_VALUE = 546;
+
+         /* Verify parameter. */
+         require(param >= DUST_VALUE);
+
+         /* Verify `nLockTime` is: 1) active and 2) checking blocks. */
+         // TODO: Is this necessary for CSV?
+         // source: https://prestwi.ch/bitcoin-time-locks/
+         require(tx.time >= 1);
+
+         /* Verify UTXO age is AFTER the reservation time. */
+         require(tx.age >= reservation);
+
+         /* Verify transaction is signed by the owner. */
+         require(checkSig(signature, owner));
+     }
+ }

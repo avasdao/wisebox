@@ -255,14 +255,14 @@ contract WiserSwap(
      * NOTE: ONLY the pool's (owner) Provider can perform this action.
      */
     function manage(pubkey authorized, sig signature) {
-        /* Calculate authorized (public key) hash. */
-        // NOTE: Must match `PUSH AsData(PUSH pubkey)` specification found at
-        //       https://spec.nexa.org/nexa/scriptTemplates.
-        bytes20 authorizedHash = hash160(
+        /* Calculate authorized key. */
+        // NOTE: Must match `PUSH AsData(PUSH pubkey)` specification found at:
+        //       https://spec.nexa.org/addresses/scriptTemplates/
+        bytes20 authKey = hash160(
             bytes(authorized.length) + authorized);
 
         /* Validate authorized provider. */
-        require(authorizedHash == provider);
+        require(authKey == provider);
 
         /* Validate transaction signature. */
         require(checkSig(signature, authorized));
