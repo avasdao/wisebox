@@ -1,0 +1,64 @@
+pragma nexscript >= 0.1.0;
+
+/*******************************************************************************
+ * Copyright (c) 2023 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Stakehouse-To-Go
+ *
+ * Creates a non-custodial container (ie. smart contract address), to be used
+ * for securing one or more assets until a specific expiration time in the
+ * future.
+ *
+ * Assets being held (ie. time-locked) in a stakehouse:
+ *   1. cannot be transferred until AFTER the reservation (expiration) time.
+ *   2. are 100% under the control of the stakehouse patron.
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : STAKEH2GO01
+ *
+ * patron      : Party whom will receive the payouts.
+ * reservation : The number of (512 second) cycles until expiration.
+ *
+ * Reservation Times
+ *   - 1 HOUR     1 hour         ~7 cycles
+ *   - 1 DAY      1 day        ~169 cycles
+ *   - 1 WEEK     7 days     ~1,181 cycles
+ *   - 1 MONTH    30 days    ~5,063 cycles
+ *   - 1 QUARTER  90 days   ~15,188 cycles
+ *   - 1 YEAR     365 days  ~61,594 cycles
+ * NOTE: Each reservation cycle lasts for 512 seconds; while there are
+ *       exactly 168.75 cycles in a 24 hour day.
+ * (source: https://prestwi.ch/bitcoin-time-locks/)
+ *
+ * For more information, please visit the following resources:
+ *   - https://docs.avas.cash/staking
+ *   - https://avasdao.org
+ *
+ * @param patron
+ * @param reservation
+ *
+ */
+contract Stakehouse(
+    pubkey visible patron,
+    int visible reservation,
+) {
+    /**
+     * Depart Stakehouse
+     *
+     * Allows a stakehouse Patron to remove their assets AFTER their
+     * reservation time has expired.
+     *
+     * @param signature
+     */
+    function depart(sig signature) {
+        /* Verify UTXO age is AFTER the reservation time. */
+        require(tx.age >= reservation);
+
+        /* Verify transaction is signed by the stakehouse patron. */
+        require(checkSig(signature, patron));
+    }
+}
