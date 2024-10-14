@@ -1,0 +1,84 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ * Copyright (c) 2024 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Economy
+ *
+ * An uncensorable, permissionless location for Creators to
+ * Build, Grow and Profit from their own *exclusive* token economies.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : ECONOMY01
+ *
+ * admins    : An NFT or SFT tokenid with Administrative privilages.
+ * acl       : A (sparse merkle tree) Access Control List, containing (individual) membership rights.
+ * universe  : A (hash) of the Universe where censorship is being managed.
+ * economyid : A unique (hash) identity for the Economy.
+ * assetid   : Official tokenid for the Base Asset of the Economy.
+ *
+ * For more information, please visit the following resources:
+ *   - https://nxy.app
+ *   - https://avasdao.org
+ *
+ * @param admins
+ * @param acl
+ * @param universe
+ * @param economyid
+ * @param assetid
+ *
+ */
+contract Economy(
+    bytes32 admins,
+    bytes32 acl,
+    bytes20 visible universe,
+    bytes32 visible unused economyid,
+    bytes32 visible assetid,
+) {
+    /**
+     * Vote
+     *
+     * TBD..
+     *
+     * @param owner
+     * @param signature
+     */
+    function vote(pubkey authorized, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Manage
+     *
+     * Guards against unauthorized access to the Economy.
+     *
+     * NOTE: The Persona (or other authority) MUST be linked to the
+     *       2nd input of the transaction.
+     */
+    function manage() {
+        /* Set authorized administrators. */
+        bytes20 ADMIN = 0x2222222222222222222222222222222222222222; // template placeholder
+        // bytes20 ADMIN = 0xD9236063BC604F8408A7E12050C4F67BB46BDCFE; // Alice - 845ee20d7b603506d4fc597b3e0a1a14be9a96fbcd8bb1205f8a9a034a9a00001337330000000000000000000000000000000000000000000000000088888888
+
+        /* Set authorized sub-group id. */
+        bytes authorized = tx.inputs[1].tokenSubgroupId;
+
+        /* Verify Admin authorization. */
+        require(hash160(authorized) == ADMIN);
+    }
+}

@@ -1,0 +1,74 @@
+pragma nexscript >= 0.2.0;
+
+/*******************************************************************************
+ * Copyright (c) 2024 Ava's DAO
+ * Released under the MIT License.
+ *
+ * Universe
+ *
+ * A supreme authority overseeing the Governance of the network.
+ *
+ * NOTES
+ * --------------------
+ * TBD..
+ *
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *
+ * Version     : 01
+ * Script Hash : 0x0000000000000000000000000000000000000000
+ * Namespace   : UNIVERSE01
+ *
+ * savior : An single, all-mighty Administrative Key, reserved as a last resort, to override everything.
+ * supers : Official System Adminstrators for Nxy Social.
+ *
+ * For more information, please visit the following resources:
+ *   - https://nxy.app
+ *   - https://avasdao.org
+ *
+ * @param savior
+ * @param supers
+ *
+ */
+contract Universe(
+    bytes20 visible savior,
+    bytes32 visible supers,
+) {
+    /**
+     * Vote
+     *
+     * TBD..
+     *
+     * @param owner
+     * @param signature
+     */
+    function vote(pubkey authorized, sig signature) {
+        /* Set dust value. */
+        int DUST_VALUE = 546;
+
+        /* Verify parameter. */
+        require(param >= DUST_VALUE);
+
+        /* Verify transaction is signed by the owner. */
+        require(checkSig(signature, owner));
+    }
+
+    /**
+     * Manage
+     *
+     * Guards against unauthorized access to the Minting authority
+     * of the primary asset.
+     *
+     * NOTE: The Persona (or other authority) MUST be linked to the
+     *       2nd input of the transaction.
+     */
+    function manage() {
+        /* Set authorized sub-group id. */
+        bytes authorized = tx.inputs[1].tokenSubgroupId;
+
+        /* Verify Admin authorization. */
+        require(
+            hash160(authorized) == savior ||
+            hash160(authorized) == supers
+        );
+    }
+}

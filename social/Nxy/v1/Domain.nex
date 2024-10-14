@@ -4,9 +4,9 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * My Space
+ * Domain
  *
- * A name registry for Spaces.
+ * A name registry for Nxy Spaces.
  *
  * NOTES
  * --------------------
@@ -16,24 +16,19 @@ pragma nexscript >= 0.2.0;
  *
  * Version     : 01
  * Script Hash : 0x0000000000000000000000000000000000000000
- * Namespace   : MYSPACE01
+ * Namespace   : DOMAIN01
  *
- * owner : Party whom will receive the payouts.
- * param : A very useful parameter.
+ * universe : A (hash) of the Universe where censorship is being managed.
  *
  * For more information, please visit the following resources:
  *   - https://nxy.app
  *   - https://avasdao.org
  *
- * @param owner
- * @param key
- * @param value
+ * @param universe
  *
  */
-contract MySpace(
-    pubkey owner,
-    bytes32 visible key,
-    int visible unused value,
+contract Domain(
+    bytes20 visible universe,
 ) {
     /**
      * Register

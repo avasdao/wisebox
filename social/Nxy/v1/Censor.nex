@@ -18,22 +18,17 @@ pragma nexscript >= 0.2.0;
  * Script Hash : 0x0000000000000000000000000000000000000000
  * Namespace   : CENSOR01
  *
- * owner : Party whom will receive the payouts.
- * param : A very useful parameter.
+ * universe : A (hash) of the Universe where censorship is being managed.
  *
  * For more information, please visit the following resources:
  *   - https://nxy.app
  *   - https://avasdao.org
  *
- * @param owner
- * @param key
- * @param value
+ * @param universe
  *
  */
 contract Censor(
-    pubkey owner,
-    bytes32 visible key,
-    int visible unused value,
+    bytes20 visible universe,
 ) {
     /**
      * Register

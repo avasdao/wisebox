@@ -19,21 +19,22 @@ pragma nexscript >= 0.2.0;
  * Script Hash : 0x0000000000000000000000000000000000000000
  * Namespace   : SPACE01
  *
- * owner : Party whom will receive the payouts.
- * param : A very useful parameter.
+ * owner    : Party whom will receive the payouts.
+ * universe : A (hash) of the Universe where censorship is being managed.
+ * param    : A very useful parameter.
  *
  * For more information, please visit the following resources:
  *   - https://nxy.app
  *   - https://avasdao.org
  *
  * @param owner
- * @param key
+ * @param universe
  * @param value
  *
  */
 contract Space(
-    pubkey owner,
-    bytes32 visible key,
+    bytes32 owner,
+    bytes20 visible universe,
     int visible unused value,
 ) {
     /**
