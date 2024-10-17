@@ -4,9 +4,10 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * Universe
+ * Oasis: The Nxy Universe
  *
- * A supreme authority overseeing the Governance of the network.
+ * The Oasis is professionally managed by a team with supreme authority to
+ * overseeing the Activities & Governance of the entire network.
  *
  * NOTES
  * --------------------
@@ -16,7 +17,7 @@ pragma nexscript >= 0.2.0;
  *
  * Version     : 01
  * Script Hash : 0x0000000000000000000000000000000000000000
- * Namespace   : UNIVERSE01
+ * Namespace   : OASIS01
  *
  * savior : An single, all-mighty Administrative Key, reserved as a last resort, to override everything.
  * supers : Official System Adminstrators for Nxy Social.
@@ -29,7 +30,7 @@ pragma nexscript >= 0.2.0;
  * @param supers
  *
  */
-contract Universe(
+contract Oasis(
     bytes20 visible savior,
     bytes32 visible supers,
 ) {
