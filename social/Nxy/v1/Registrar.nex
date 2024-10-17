@@ -4,9 +4,12 @@ pragma nexscript >= 0.2.0;
  * Copyright (c) 2024 Ava's DAO
  * Released under the MIT License.
  *
- * Domain
+ * Registrar
  *
- * A name registry for Nxy Spaces.
+ * An open name registry for Nxy, including:
+ *   1. Personas
+ *   2. Spaces
+ *   3. Oases
  *
  * NOTES
  * --------------------
@@ -27,7 +30,7 @@ pragma nexscript >= 0.2.0;
  * @param universe
  *
  */
-contract Domain(
+contract Registrar(
     bytes20 visible universe,
 ) {
     /**
