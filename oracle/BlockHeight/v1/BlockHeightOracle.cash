@@ -1,0 +1,21 @@
+pragma cashscript ^0.9.0;
+// source: https://github.com/fex-cash/bch-height-oracle
+
+contract BlockHeightOracle(int rewardPerBlock, int fee) {
+    function spend(int height) {
+        require(height < 500000000);
+        require(tx.time >= height);
+        require(tx.inputs[this.activeInputIndex].lockingBytecode == tx.outputs[this.activeInputIndex].lockingBytecode);
+        int delta = height - int(tx.inputs[this.activeInputIndex].nftCommitment);
+        require(delta >= 0);
+        if(delta == 0) {
+            if(tx.inputs[this.activeInputIndex].value > 500000000) {
+                fee = 0;
+            }
+            require(tx.inputs[this.activeInputIndex].value + fee <= tx.outputs[this.activeInputIndex].value);
+        } else {
+            require(tx.inputs[this.activeInputIndex].value - rewardPerBlock * delta <= tx.outputs[this.activeInputIndex].value);
+        }
+        require(height == int(tx.outputs[this.activeInputIndex].nftCommitment));
+    }
+}
