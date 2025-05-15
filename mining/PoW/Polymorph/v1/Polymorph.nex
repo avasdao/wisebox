@@ -175,7 +175,7 @@ contract Polymorph() {
          *   ✔ SHA-256(RIPEMD-160)
          *   ✔ SHA-256(SHA-256)
          *
-         * NOTE: Do to the current Op code limit and Script size,
+         * NOTE: Due to the current Op code limit and Script size,
          *       there is a maximum of ten (10) random hashes allowed.
          *
          * NOTE: RIPEMD-160 will always used as the final hash.
